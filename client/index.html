@@ -1,0 +1,210 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Hello World</title>
+	</head>
+	
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/4.5.2/pixi.min.js"></script>
+	<script src="/socket.io/socket.io.js"></script>
+	<script src="client/scripts/ClientPlayer.js"></script>
+	<script src="client/scripts/ClientEnemy.js"></script>
+	<script src="client/scripts/Drawer.js"></script>
+	<body>
+	
+	</body>
+	
+	<script>
+		var socket = io();
+		var pixi = new PIXI.Application();
+		document.body.appendChild(pixi.view);
+
+		var playerAmount = 0;
+		var playerTurn = true;
+		var battleInited = false;
+		var menuInited = false;
+		var enemyTimer = 0;
+		
+		pixi.ticker.add(()=>
+		{
+			if(Player.getPlayerCount() > 0 && Player.list[selfId].inMenu){
+				if(!menuInited)
+					Drawer.initMenu();
+				Drawer.drawMenu();
+			}
+			
+			if(Player.getPlayerCount() > 0 && Player.list[selfId].inBattle){
+				if(!battleInited)
+					Drawer.initBattle();
+				if(!Player.list[selfId].inRewards)
+					Drawer.drawBattle();
+			}		
+				
+		});
+		
+			//MENU BUTTONS
+			
+			socket.on('allPlayersReady', function(data){
+				console.log("ALL PLAYERS ARE READY, LEADER, CHOOSE YOUR ADVENTURE!");
+			
+			});
+			
+			socket.on('confirmGoBattle', function(data){
+				Player.list[data.id].readyToBattle = true;
+				goBattleText.text = ('Players ready to battle: (' + Player.getGoReadyCount() + "/" + Player.getPlayerCount() + ")");
+			});
+				
+			socket.on('battleTransition', function(data){
+				console.log("Transitioning to battle...");
+				Player.list[selfId].inBattle = true;
+				Player.list[selfId].inMenu = false;
+			});
+			
+			socket.on('showRewards',function(data){
+				Player.list[selfId].inRewards = true;
+				for(var i in Player.list){
+					Player.list[i].readyToBattle = false;
+					Player.list[i].experience += data.exp;
+					Player.list[i].gold += data.gold;
+				}
+				var rewards = [ data.exp, data.gold ];
+				Drawer.initRewards(rewards);
+			});
+			
+			
+			socket.on('leaderSwitch', function(data){
+				console.log("leader switched to: " + data.newLeader);
+				Player.list[data.newLeader].partyLeader = true;
+				Drawer.initMenu();
+			});
+			
+			socket.on('atkConfirm',function(data){
+				Player.list[data.player].attacking = true;
+				Player.list[data.player].target = data.target;
+				Player.onPlayerInfoChange(data.player);				
+			});
+			
+			socket.on('confirmRdy', function(data){
+				Player.list[data.player].ready = data.ready;
+				Player.onPlayerInfoChange(data.player);
+								
+			});
+			
+			socket.on('enemyAttack', function(data){
+				playerTurn = false;
+				turnText.text = "Turn: Enemies";
+				for(var i in Enemy.list){
+					Enemy.list[data.enemyID].attacking = true;
+					Enemy.list[data.enemyID].target = data.targetID;
+				}
+				enemyTimer = 0;
+			});
+			
+			socket.on('playerTurn', function(){
+				console.log("Player turn...");
+				playerTurn = true;
+				turnText.text = "Turn: Players";
+				for(var i in Player.list){
+					Player.list[i].APCurrent = Player.list[i].APMax;
+					Player.list[i].ready = false;
+					Player.onPlayerInfoChange(Player.list[i].id);
+					console.log("Player info change on player turn!");
+				}
+			
+			});
+			
+		var selfId = null;	
+		socket.on('init',function(data){	
+			if(data.selfId)
+				selfId = data.selfId;
+			
+		
+			for(var i = 0; i < data.PlayerInitPack.length; i++){
+				new Player(data.PlayerInitPack[i]);
+				
+			}
+			
+			for(var i = 0; i < data.EnemyInitPack.length; i++){
+				new Enemy(data.EnemyInitPack[i]);
+			}
+
+		});
+		
+		socket.on('update',function(data){
+			for(var i = 0; i < data.player.length; i++){
+				var pack = data.player[i];
+				var p = Player.list[pack.id];
+
+				if(p){
+					if(pack.maxHealth !== undefined && pack.maxHealth !== p.maxHealth){
+						p.maxHealth = pack.maxHealth;
+
+						}
+						
+					if(pack.healthCurrent !== undefined && pack.healthCurrent !== p.healthCurrent){
+						p.healthCurrent = pack.healthCurrent;		
+					
+						}
+						
+					if(pack.APCurrent !== undefined && pack.APCurrent !== p.APCurrent){
+						p.APCurrent = pack.APCurrent;	
+
+						}
+						
+				}
+				
+			}
+			
+			for(var i = 0; i < data.enemy.length; i++){
+				var pack = data.enemy[i];
+				var e = Enemy.list[pack.id];
+				if(e){
+					if(pack.maxHealth !== undefined)
+						e.maxHealth = pack.maxHealth;
+					if(pack.healthCurrent !== undefined){
+						e.healthCurrent = pack.healthCurrent;
+						}
+					if(pack.APCurrent !== undefined){
+						e.APCurrent = pack.APCurrent;
+						}
+						
+				}	
+			}
+		});
+		
+		socket.on('remove',function(data){		
+			for(var i = 0; i < data.PlayerRemovePack.length; i++){
+			
+				console.log("Deleting player " + data.PlayerRemovePack[i]);
+				
+				if(Player.list[data.PlayerRemovePack[i]]){
+					pixi.stage.removeChild(Player.list[data.PlayerRemovePack[i]].Sprite);
+					pixi.stage.removeChild(Player.list[data.PlayerRemovePack[i]].healthText);
+				}
+				
+				delete Player.list[data.PlayerRemovePack[i]];
+
+				
+				playerAmount = Player.getPlayerCount();
+				
+			}
+		});
+		
+		socket.on('enemyDeath', function(data){
+			setTimeout(function(){
+				Enemy.list[data.id].Sprite = Enemy.list[data.id].DeadSprite;
+				Enemy.list[data.id].healthCurrent = 0;
+				Enemy.list[data.id].APCurrent = 0;
+				Enemy.list[data.id].dead = true;
+				Enemy.onEnemyInfoChange(data.id);
+			}, 600);
+		});
+		
+		socket.on('confirmSelect',function(data){
+			Player.list[data.player].target = data.target;
+			Player.onPlayerInfoChange(data.player);
+		});
+		
+	</script>
+
+</html>
