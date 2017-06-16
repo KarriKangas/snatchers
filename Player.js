@@ -1,6 +1,7 @@
 var Entity = require('./Entity.js');
 var Enemy = require('./Enemy.js');
-
+var Body = require('./Body.js');
+console.log("PLAYER: " + Body.Deer.name);
 var Player = function(param){
 	var self = Entity(param);
 	self.target = null;
@@ -17,6 +18,7 @@ var Player = function(param){
 	self.getInitPack = function(){
 		return {
 			id:self.id,
+			body:Body.Wisp,
 			healthMax:self.healthMax,
 			healthCurrent:self.healthCurrent,
 			APMax:self.APMax,
@@ -53,16 +55,18 @@ var Player = function(param){
 	return self;
 	
 }
-
+Player.one = 100;
 Player.list = {};
 
+//THIS SHOULD BE CHANGED TO REFLECT DATABASE
 Player.onConnect = function(socket){
 	var player = Player({
 		id:socket.id,
-		healthMax: 100,
-		APMax: 10,
-		dieSize: 18,
-		dieAmount: 6,
+		body:Body.Wisp,
+		healthMax: Body.Wisp.healthMax+100,
+		APMax: Body.Wisp.APMax+10,
+		dieSize: Body.Wisp.dieSize+5,
+		dieAmount: Body.Wisp.dieAmount+3,
 	});
 		
 	socket.emit('init',{

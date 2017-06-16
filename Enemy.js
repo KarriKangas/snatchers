@@ -1,5 +1,6 @@
 var Entity = require('./Entity.js');
-
+var Body = require('./Body.js');
+console.log("Enemy: " + Body.Wisp.name);
 var Enemy = function(param){
 	var self = Entity(param);
 	self.target = null;
@@ -10,6 +11,7 @@ var Enemy = function(param){
 	self.getInitPack = function(){
 		return {
 			id:self.id,
+			body:self.body,
 			healthMax:self.healthMax,
 			healthCurrent:self.healthCurrent,
 			APMax:self.APMax,
@@ -41,18 +43,19 @@ var Enemy = function(param){
 Enemy.list = {};
 
 Enemy.Create = function(difficulty){
+	var body = Body.getBody(difficulty)
 	var enemy = Enemy({
 		id:Math.random(),
-		healthMax: Math.floor(Math.random() * (40-5) + 5) * difficulty,
-		dieSize: Math.floor((Math.random() * (6-2) + 2) * ((difficulty+1)*0.5)) ,
-		dieAmount: Math.floor((Math.random() * (2-0) + 0) + (difficulty*0.5)) ,
-		APMax: Math.floor((Math.random() * (10-5) + 5) + (difficulty*difficulty)),
+		body:body,
+		healthMax:body.healthMax,
+		dieSize:body.dieSize,
+		dieAmount:body.dieAmount,
+		APMax:body.APMax,
 	});
 		
-	console.log("Enemy created...");
+	console.log("Enemy created..." + enemy.body.name);
 	return enemy;
 }
-
 
 Enemy.getAllInitPack = function(){
 	var enemies = [];

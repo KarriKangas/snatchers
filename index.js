@@ -1,9 +1,19 @@
 var express = require('express');
 var app = express();
 var serv = require('http').Server(app);
-var Player = require('./Player.js');
+
 var Entity = require('./Entity.js');
+//THIS ORDER BELOW DEFINES WHICH CLASSES CAN REQUIRE WHICH CLASSES
+//IN THIS CURRENT ORDER
+//Player
+//Enemy
+//ONLY Player.js can REQUIRE Enemy.js
+//REQUIRING Player.js IN Enemy.js WILL NOT WORK
+//WHY? DON'T ASK? WILL IT BE FIXED? MAYBE!
+var Player = require('./Player.js');
 var Enemy = require('./Enemy.js');
+
+
 app.get('/', function(req, res){
 	res.sendFile(__dirname + '/client/index.html');
 });
@@ -125,6 +135,34 @@ io.sockets.on('connection', function(socket){
 				console.log("All enemies dead, display rewards");
 				createRewards();
 			}
+		}
+	});
+	
+	socket.on("snatch", function(data){
+		//CHECK SNATCH REQUIREMENTS!!!
+		//1)PLAYER HAS A TARGET!
+		//2)ONLY ONE ENEMY REMAINING!
+		//3)THAT ENEMY HAS LESS THAN 1/3 HEALTH!
+		console.log("Attempting snatch!");
+		if(Player.list[data.id].target != null){
+			attacker = Player.list[data.id];
+			console.log("Player has a snatch target...");
+			if(Enemy.list[attacker.target].healthCurrent <= (Enemy.list[attacker.target].healthMax/3)){
+				console.log("Snatch target has less than 33% health!");
+				if(Enemy.GetEnemyAmount() == 1){
+					console.log("There is only one enemy remaining...");
+					console.log("SUCCESSFUL SNATCH");
+					Enemy.list[attacker.target].healthCurrent = 0;
+					Player.list[data.id].body = Enemy.list[attacker.target].body;
+					socket.emit('snatchSuccess', {
+						id:data.id,
+						body:Enemy.list[attacker.target].body,
+					});
+					createRewards();
+				}
+			
+			
+			}	
 		}
 	});
 	
@@ -279,7 +317,7 @@ function initiateEnemyBehavior(){
 			}
 		}
 	}
-}	
+}
 
 function createBattle(difficulty){
 	//Create enemies for battle

@@ -4,10 +4,11 @@ var Drawer = function(){
 	
 }
 		
-//BATTLE
+	//BATTLE
 	var Atkbutton = PIXI.Sprite.fromImage('client/img/Battle/AtkButton.png');
 	var Invbutton = PIXI.Sprite.fromImage('client/img/Battle/InvButton.png');
 	var Skillbutton = PIXI.Sprite.fromImage('client/img/Battle/SkillButton.png');
+	var Snatchbutton = PIXI.Sprite.fromImage('client/img/Battle/SnatchButton.png');
 	var BottomBar = PIXI.Sprite.fromImage('client/img/Battle/BottomBar.png');
 	//var PlayerSprite = PIXI.Sprite.fromImage('client/img/Battle/Player.png');
 	var EnemySprite = PIXI.Sprite.fromImage('client/img/Battle/Enemy.png');
@@ -115,6 +116,14 @@ var Drawer = function(){
 	Atkbutton.on('pointerdown', () => {
 		if(playerTurn){
 			socket.emit('atk',{
+				id:selfId
+			});
+		}		
+	});
+	
+	Snatchbutton.on('pointerdown', () => {
+		if(playerTurn){
+			socket.emit('snatch',{
 				id:selfId
 			});
 		}		
@@ -453,13 +462,14 @@ var Drawer = function(){
 				Skillbutton,	
 				Invbutton,
 				Rdybutton,
+				Snatchbutton,
 			]
 			
 			for(var i = 0; i < BattleUIbuttons.length; i++){
 					BattleUIbuttons[i].interactive = true;
 					BattleUIbuttons[i].buttonMode = true;
 					BattleUIbuttons[i].anchor.set(0.5);
-					BattleUIbuttons[i].x = 100 + i*200;
+					BattleUIbuttons[i].x = 100 + i*150;
 					BattleUIbuttons[i].y = 500;
 					pixi.stage.addChild(BattleUIbuttons[i]);
 			}		

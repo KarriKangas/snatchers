@@ -1,6 +1,7 @@
 var Entity = function(param){
 	var self = {
 		id:"",
+		body:null,
 		healthMax:0,
 		healthCurrent:0,
 		APMax:0,
@@ -10,7 +11,9 @@ var Entity = function(param){
 	}
 	if(param){
 		if(param.id)
-			self.id = param.id;		
+			self.id = param.id;	
+		if(param.body)
+			self.body = param.body;
 		if(param.healthMax){
 			self.healthMax = param.healthMax;
 			self.healthCurrent = param.healthMax;

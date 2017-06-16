@@ -9,14 +9,14 @@ var Enemy = function(initPack){
 	self.APCurrent = initPack.APCurrent;
 	self.APMax = initPack.APMax;
 	self.dead = false;
-	self.body = "Wisp";
+	self.body = initPack.body;
 	//Random wait time 20-60 frames for enemy actions
 	self.waitTime = initPack.waitTime;
 	self.currentWait = initPack.waitTime;
 	self.attackFrame = 0;
 	self.attacking = false;
 	
-	self.Sprite = PIXI.Sprite.fromImage('client/img/Battle/' + self.body +'.png');
+	self.Sprite = PIXI.Sprite.fromImage('client/img/Battle/' + self.body.name +'.png');
 	self.Sprite.scale.x = -1;
 	self.DeadSprite = PIXI.Sprite.fromImage('client/img/Battle/Dead.png');
 	self.DeadSprite.scale.x = -1;

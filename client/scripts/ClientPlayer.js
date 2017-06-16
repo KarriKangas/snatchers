@@ -12,7 +12,7 @@
 		self.experience = initPack.experience;
 		self.gold = initPack.gold;
 		self.level = initPack.level;
-		self.body = 'Wisp';
+		self.body = initPack.body;
 		self.readyToBattle = initPack.readyGoBattle;
 		
 		self.target = null;
@@ -25,7 +25,7 @@
 		self.inRewards = false;
 		self.inMenuChar = false;
 		
-		self.Sprite = PIXI.Sprite.fromImage('client/img/Battle/' + self.body +'.png');
+		self.Sprite = PIXI.Sprite.fromImage('client/img/Battle/' + self.body.name +'.png');
 		self.healthText = new PIXI.Text('', healthStyle);
 		
 		self.Sprite.interactive = true;

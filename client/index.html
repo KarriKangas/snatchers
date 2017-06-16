@@ -2,7 +2,7 @@
 <html>
 	<head>
 		<meta charset="utf-8">
-		<title>Hello World</title>
+		<title>SoulSnatchers</title>
 	</head>
 	
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/4.5.2/pixi.min.js"></script>
@@ -110,6 +110,13 @@
 					Player.onPlayerInfoChange(Player.list[i].id);
 					console.log("Player info change on player turn!");
 				}
+			
+			});
+			
+			socket.on('snatchSuccess', function(data){
+				Player.list[data.id].body = data.body;
+				Player.list[data.id].Sprite = PIXI.Sprite.fromImage('client/img/Battle/' + data.body.name +'.png');
+				console.log(data.id + " new body is a " + data.body.name + "!");
 			
 			});
 			
