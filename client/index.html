@@ -4,7 +4,7 @@
 		<meta charset="utf-8">
 		<title>SoulSnatchers</title>
 	</head>
-	
+	<body style="margin-left:25%; margin-top:5%; background-image: url('http://wallpapercave.com/wp/2oOGOxL.jpg')">
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/4.5.2/pixi.min.js"></script>
 	<script src="/socket.io/socket.io.js"></script>
 	<script src="client/scripts/ClientPlayer.js"></script>
@@ -64,11 +64,35 @@
 				Player.list[selfId].inRewards = true;
 				for(var i in Player.list){
 					Player.list[i].readyToBattle = false;
-					Player.list[i].experience += data.exp;
+					Player.list[i].experience += data.soulexp;
+					if(!data.didSnatch){
+						Player.list[i].bodyExperience += data.bodyexp;
+						console.log("Player didnt snatch and is awarded body xp!");
+					}else
+						console.log("Player did snatch and is NOT awarded body xp.");
+						
 					Player.list[i].gold += data.gold;
+					
 				}
-				var rewards = [ data.exp, data.gold ];
+				
+				var rewards = [];
+				if(!data.didSnatch)
+					rewards = [ data.bodyexp, data.gold ];
+				else
+					rewards = [ 0, data.gold ];
 				Drawer.initRewards(rewards);
+			});
+			
+			socket.on('levelUp', function(data){
+				if(data.soul){
+					Player.list[data.id].level++;
+					Player.list[data.id].soulPoints++;
+					
+				}
+				if(data.body){
+					Player.list[data.id].bodyLevel++;
+					
+				}
 			});
 			
 			
@@ -115,8 +139,11 @@
 			
 			socket.on('snatchSuccess', function(data){
 				Player.list[data.id].body = data.body;
+				Player.list[data.id].bodyLevel = 1;
+				Player.list[data.id].bodyExperience = 0;
 				Player.list[data.id].Sprite = PIXI.Sprite.fromImage('client/img/Battle/' + data.body.name +'.png');
 				console.log(data.id + " new body is a " + data.body.name + "!");
+				console.log(data.id + " has now bodyLevel " + Player.list[data.id].bodyLevel + " and experience " + Player.list[data.id].bodyExperience);
 			
 			});
 			
@@ -125,16 +152,12 @@
 			if(data.selfId)
 				selfId = data.selfId;
 			
-		
-			for(var i = 0; i < data.PlayerInitPack.length; i++){
+			for(var i = 0; i < data.PlayerInitPack.length; i++)
 				new Player(data.PlayerInitPack[i]);
 				
-			}
-			
-			for(var i = 0; i < data.EnemyInitPack.length; i++){
+			for(var i = 0; i < data.EnemyInitPack.length; i++)
 				new Enemy(data.EnemyInitPack[i]);
-			}
-
+			
 		});
 		
 		socket.on('update',function(data){
@@ -143,21 +166,25 @@
 				var p = Player.list[pack.id];
 
 				if(p){
-					if(pack.maxHealth !== undefined && pack.maxHealth !== p.maxHealth){
+					if(pack.maxHealth !== undefined && pack.maxHealth !== p.maxHealth)
 						p.maxHealth = pack.maxHealth;
-
-						}
 						
-					if(pack.healthCurrent !== undefined && pack.healthCurrent !== p.healthCurrent){
+					if(pack.healthCurrent !== undefined && pack.healthCurrent !== p.healthCurrent)
 						p.healthCurrent = pack.healthCurrent;		
-					
-						}
 						
-					if(pack.APCurrent !== undefined && pack.APCurrent !== p.APCurrent){
+					if(pack.APMax !== undefined && pack.APMax !== p.APMax)
+						p.APMax = pack.APMax;	
+									
+					if(pack.APCurrent !== undefined && pack.APCurrent !== p.APCurrent)
 						p.APCurrent = pack.APCurrent;	
-
-						}
 						
+					if(pack.dieSize !== undefined && pack.dieSize !== p.dieSize)
+						p.dieSize = pack.dieSize;	
+						
+					if(pack.dieAmount !== undefined && pack.dieAmount !== p.dieAmount)
+						p.dieAmount = pack.dieAmount;	
+						
+					
 				}
 				
 			}
@@ -190,8 +217,6 @@
 				}
 				
 				delete Player.list[data.PlayerRemovePack[i]];
-
-				
 				playerAmount = Player.getPlayerCount();
 				
 			}

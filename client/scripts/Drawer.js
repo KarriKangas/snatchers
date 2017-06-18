@@ -38,7 +38,21 @@ var Drawer = function(){
 	var CharBlock3 = PIXI.Sprite.fromImage('client/img/Menu/Char/CharBlock.png');
 	var CharImage = PIXI.Sprite.fromImage('client/img/Menu/Char/NoImage.png');
 	var CharBackButton =  PIXI.Sprite.fromImage('client/img/Menu/BackButton.png');
-		
+	
+	//RELEASE RELATED UI
+	var ReleaseButton =  PIXI.Sprite.fromImage('client/img/Menu/Char/ReleaseButton.png');
+	var NoButton =  PIXI.Sprite.fromImage('client/img/Menu/Char/NoButton.png');
+	var YesButton =  PIXI.Sprite.fromImage('client/img/Menu/Char/YesButton.png');
+	
+	//RELEASE PANEL IS THE CONFIRMATION OF RELEASE
+	var ReleasePanel =  PIXI.Sprite.fromImage('client/img/Menu/Char/ReleasePanel.png');
+	//RESET PANEL IS WHERE THE ACTUAL STAT CHANGING HAPPENS
+	var ResetPanel =  PIXI.Sprite.fromImage('client/img/Menu/Char/ResetPanel.png');
+	
+	var PlusButton =  PIXI.Sprite.fromImage('client/img/Menu/Char/PlusButton.png');
+	var MinusButton =  PIXI.Sprite.fromImage('client/img/Menu/Char/MinusButton.png');
+	
+	
 		//TEXT STYLES HERE
 	var healthStyle = new PIXI.TextStyle({
 		fontFamily: 'Arial',
@@ -67,7 +81,10 @@ var Drawer = function(){
 	var bodyText = new PIXI.Text('', menuStyle);
 	var soulText = new PIXI.Text('', menuStyle);
 	var totalText = new PIXI.Text('', menuStyle);
-		
+	//RELEASE TEXTS
+	var ReleaseText = new PIXI.Text('', menuStyle);
+	var Reset = new PIXI.Text('', menuStyle);	
+	
 	//MENU BUTTONS
 	BattleButton.on('pointerdown', () => {
 		socket.emit('goBattle', {
@@ -81,6 +98,18 @@ var Drawer = function(){
 			
 	CharBackButton.on('pointerdown', () => {
 		Drawer.initMenu();		
+	});
+	
+	ReleaseButton.on('pointerdown',() => {
+		Drawer.initReleaseConfirm();
+	});
+	
+	YesButton.on('pointerdown',() => {
+		Drawer.initReset();
+	});
+	
+	NoButton.on('pointerdown',() => {
+		Drawer.initChar();
 	});
 	
 	EasyButton.on('pointerdown', () => {
@@ -114,7 +143,7 @@ var Drawer = function(){
 	});	
 	
 	Atkbutton.on('pointerdown', () => {
-		if(playerTurn){
+		if(playerTurn && !Player.list[selfId].attacking){
 			socket.emit('atk',{
 				id:selfId
 			});
@@ -402,11 +431,14 @@ var Drawer = function(){
 		CharImage.y = 100;
 		pixi.stage.addChild(CharImage);
 		
-
+		console.log("for Player " + selfId + " ----- " +Player.list[selfId].bodyLevel + " is bodylevel " + Player.list[selfId].bodyExperience + " is bodyexp" );
+		var Body = Player.list[selfId].body;
 		bodyText.text = "BODY STATS"
-		+"\nDamage: " + Player.list[selfId].dieAmount + "d" + Player.list[selfId].dieSize
-		+"\nHealth:" + Player.list[selfId].healthMax
-		+"\nAction Points:" + Player.list[selfId].APMax
+		+"\nDamage: " + (Body.dieAmount + (Player.list[selfId].bodyLevel*Body.levelBonuses[3])) + "d" + (Body.dieSize + (Player.list[selfId].bodyLevel*Body.levelBonuses[2]))
+		+"\nHealth: " + (Player.list[selfId].body.healthMax + (Player.list[selfId].bodyLevel*Body.levelBonuses[0]))
+		+"\nAction Points: " + (Body.APMax + (Player.list[selfId].bodyLevel*Body.levelBonuses[1]))
+		+"\nBody level: " + Player.list[selfId].bodyLevel + "/" + Body.maxLevel
+		+"\nBody experience: " + Player.list[selfId].bodyExperience + "/" + Math.floor(50*(Math.pow(Player.list[selfId].bodyLevel, 2.5)))
 		+"\n\n---Everything else---";
 		bodyText.x = 34;
 		bodyText.y = 200;
@@ -414,9 +446,11 @@ var Drawer = function(){
 		
 
 		soulText.text = "SOUL STATS"
-		+"\nDamage: +%"
-		+"\nHealth: +%"
-		+"\nAction Points: +%"
+		+"\nSoul Level: " + Player.list[selfId].level
+		+"\nSoul experience: " + Player.list[selfId].experience + "/" +  Math.floor(50*(Math.pow(Player.list[selfId].level, 2.5)))
+		+"\nDamage: + "+ Player.list[selfId].soulDamage*100 +"%"
+		+"\nHealth: + "+ Player.list[selfId].soulHealth*100 +"%"
+		+"\nAction Points: + "+ Player.list[selfId].soulAP*100 +"%"
 		+"\n\n---Everything else---";
 		soulText.x = 300;
 		soulText.y = 25;
@@ -424,11 +458,10 @@ var Drawer = function(){
 		
 
 		totalText.text = "TOTAL STATS"
-		+"\nDamage: " + Player.list[selfId].dieAmount + "d" + Player.list[selfId].dieSize
-		+"\nHealth:" + Player.list[selfId].healthMax
-		+"\nAction Points:" + Player.list[selfId].APMax
-		+"\n\nExperience:" + Player.list[selfId].experience
-		+"\nGold:" + Player.list[selfId].gold
+		+"\nDamage: " + (Body.dieAmount + (Player.list[selfId].bodyLevel*Body.levelBonuses[3])) + "d" + (Body.dieSize + (Player.list[selfId].bodyLevel*Body.levelBonuses[2]) + Player.list[selfId].soulDamage*100 +"%")
+		+"\nHealth: " + (Player.list[selfId].body.healthMax + (Player.list[selfId].bodyLevel*Body.levelBonuses[0])+ Player.list[selfId].soulHealth*100 +"%")
+		+"\nAction Points: " + (Body.APMax + (Player.list[selfId].bodyLevel*Body.levelBonuses[1])+ Player.list[selfId].soulAP*100 +"%")
+		+"\n\nGold: " + Player.list[selfId].gold
 		+"\n\n---Everything else---";
 		totalText.x = 566;
 		totalText.y = 25;
@@ -440,6 +473,18 @@ var Drawer = function(){
 		CharBackButton.x = 133;
 		CharBackButton.y = 550;
 		pixi.stage.addChild(CharBackButton);
+		
+		ReleaseButton.interactive = true;
+		ReleaseButton.buttonMode = true;
+		ReleaseButton.anchor.set(0.5);
+		ReleaseButton.x = 399;
+		ReleaseButton.y = 550;
+		pixi.stage.addChild(ReleaseButton);
+		
+		console.log(Player.list[selfId].body.name + " what?");
+		console.log(Player.list[selfId].dieAmount + " what?");
+		console.log(Player.list[selfId].dieSize + " what?");
+		console.log(Player.list[selfId].healthMax + " what?");
 		
 	}
 	
@@ -479,3 +524,47 @@ var Drawer = function(){
 				Player.onPlayerInfoChange(Player.list[i].id);
 			}
 		}
+		
+	Drawer.initReleaseConfirm = function(){
+		ReleasePanel.anchor.set(0.5);
+		ReleasePanel.x = 400;
+		ReleasePanel.y = 300;
+		pixi.stage.addChild(ReleasePanel);
+
+		YesButton.interactive = true;
+		YesButton.buttonMode = true;
+		YesButton.anchor.set(0.5);
+		YesButton.x = 350;
+		YesButton.y = 375;
+		YesButton.scale.x = 0.5;
+		YesButton.scale.y = 0.5;
+		pixi.stage.addChild(YesButton);
+
+		NoButton.interactive = true;
+		NoButton.buttonMode = true;
+		NoButton.anchor.set(0.5);
+		NoButton.x = 450;
+		NoButton.y = 375;
+		NoButton.scale.x = 0.5;
+		NoButton.scale.y = 0.5;
+		pixi.stage.addChild(NoButton);	
+		
+		ReleaseText.text = "Are you sure you wish to \nrelease your current body \nin order to distribute your \n" + Player.list[selfId].soulPoints + " soul points?";
+		ReleaseText.x = 310;
+		ReleaseText.y = 200;
+		pixi.stage.addChild(ReleaseText);
+		
+		//SET BACKBUTTON TO NOT WORK
+		CharBackButton.buttonMode = false;
+		CharBackButton.interactive = false;
+		
+	}
+	
+	Drawer.initReset = function(){
+		Reset.anchor.set(0.5);
+		Reset.x = 400;
+		Reset.y = 300;
+		pixi.stage.addChild(Reset);
+		
+		
+	}

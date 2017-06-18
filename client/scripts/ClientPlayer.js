@@ -4,8 +4,8 @@
 	
 		self.dieSize = initPack.dieSize;
 		self.dieAmount = initPack.dieAmount;		
-		self.healthCurrent = initPack.healthCurrent;
 		self.healthMax = initPack.healthMax;
+		self.healthCurrent = initPack.healthMax;
 		self.APCurrent = initPack.APCurrent;
 		self.APMax = initPack.APMax;
 		self.partyLeader = initPack.partyLeader;
@@ -13,7 +13,15 @@
 		self.gold = initPack.gold;
 		self.level = initPack.level;
 		self.body = initPack.body;
+		self.bodyLevel = initPack.bodyLevel;
+		self.bodyExperience = initPack.bodyExperience;
 		self.readyToBattle = initPack.readyGoBattle;
+		
+		//Soul stats
+		self.soulDamage = initPack.soulDamage;
+		self.soulHealth = initPack.soulHealth;
+		self.soulAP = initPack.soulAP;
+		self.soulPoints = initPack.soulPoints;
 		
 		self.target = null;
 		self.attacking = false;

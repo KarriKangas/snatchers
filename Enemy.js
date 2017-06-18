@@ -1,6 +1,6 @@
 var Entity = require('./Entity.js');
 var Body = require('./Body.js');
-console.log("Enemy: " + Body.Wisp.name);
+
 var Enemy = function(param){
 	var self = Entity(param);
 	self.target = null;
@@ -45,7 +45,7 @@ Enemy.list = {};
 Enemy.Create = function(difficulty){
 	var body = Body.getBody(difficulty)
 	var enemy = Enemy({
-		id:Math.random(),
+		id:Math.random()+5,
 		body:body,
 		healthMax:body.healthMax,
 		dieSize:body.dieSize,

@@ -13,6 +13,8 @@ var Entity = require('./Entity.js');
 var Player = require('./Player.js');
 var Enemy = require('./Enemy.js');
 
+const XPBASE = 50;
+const XPFACTOR = 2.5;
 
 app.get('/', function(req, res){
 	res.sendFile(__dirname + '/client/index.html');
@@ -77,22 +79,24 @@ io.sockets.on('connection', function(socket){
 		console.log("startBattle received from: " + data.sender);
 		if(Player.list[data.sender].partyLeader && Player.ArePlayersGoReady()){
 			createBattle(data.difficulty);
-			console.log("emitting battleTransition1");
 			for(var i in SOCKET_LIST){
 				Asocket = SOCKET_LIST[i];
 				Asocket.emit('battleTransition', {
 			});
 		}	
-		console.log("All battleTransitions2");
 		}
 	});
 	
 	socket.on("atk", function(data){
 		console.log(Player.list[data.id].target + " and " + Player.list[data.id].APCurrent);
-		if(Player.list[data.id].target != null){
+		//ID > 5 means target is an enemy, enemy random id's always come with a +5
+		if(Player.list[data.id].target != null && Player.list[data.id].target > 5){
 			var attacker = Player.list[data.id];
 			if(attacker.APCurrent >= 5){
 				var damage = attacker.dieAmount * (Math.floor(Math.random()*(attacker.dieSize-1)+1));
+				console.log("PLAYER IS ABOUT TO DEAL " + damage + " DAMAGE");
+				damage = damage+damage*attacker.soulDamage;
+				console.log("AFTER APPLYING SOUL BONUS, DAMAGE IS " + damage);
 				attacker.APCurrent-=5;
 				Enemy.list[attacker.target].healthCurrent -= damage;
 				
@@ -154,10 +158,17 @@ io.sockets.on('connection', function(socket){
 					console.log("SUCCESSFUL SNATCH");
 					Enemy.list[attacker.target].healthCurrent = 0;
 					Player.list[data.id].body = Enemy.list[attacker.target].body;
-					socket.emit('snatchSuccess', {
-						id:data.id,
-						body:Enemy.list[attacker.target].body,
-					});
+					Player.list[data.id].bodyLevel = 1;
+					Player.list[data.id].bodyExperience = 0;
+					Player.list[data.id].didSnatch = true;
+					for(var i in SOCKET_LIST){
+						var Asocket = SOCKET_LIST[i];
+						Asocket.emit('snatchSuccess', {
+							id:data.id,
+							body:Enemy.list[attacker.target].body,
+						});
+					}
+					Player.ChangeBody(data.id);
 					createRewards();
 				}
 			
@@ -288,7 +299,6 @@ setInterval(function(){
 			}
 		}
 	}
-	
 }, 1000/25);
 
 function initiateEnemyBehavior(){
@@ -332,6 +342,7 @@ function createBattle(difficulty){
 	}
 }
 
+//FUNCTION TO CREATE REWARDS AFTER A BATTLE
 function createRewards(){
 	var experienceReward=0;
 	var goldReward=0;
@@ -342,21 +353,76 @@ function createRewards(){
 		goldReward += Enemy.list[i].healthMax/5 + Enemy.list[i].APMax/5 + Enemy.list[i].dieSize + Enemy.list[i].dieAmount*2;
 	}
 	//Floor rewards, wait 2000ms and send rewards to players
-	experienceReward = Math.floor(experienceReward);
+	bodyExpReward = Math.floor(experienceReward);
+	soulExpReward = Math.floor(experienceReward/2);
 	goldReward = Math.floor(goldReward);
 	
-	console.log("Rewarding all Players with " + experienceReward + " experience and " + goldReward + " gold!");
+	console.log("Rewarding all Players with " + bodyExpReward + " experience and " + goldReward + " gold!");
+	
+	//Go through every player and check for level ups/bodylevel ups
+	for(var i in Player.list){
+		var leveling = true;
+		Player.list[i].experience += soulExpReward;
+		while(leveling){
+			if(Player.list[i].experience >= Math.floor(XPBASE*(Math.pow(Player.list[i].level, XPFACTOR)))){
+				Player.list[i].level++;
+				Player.list[i].soulPoints++;
+				SOCKET_LIST[Player.list[i].id].emit('levelUp', {
+					id:Player.list[i].id,
+					soul:true,
+					body:false,			
+				});
+				
+				console.log("Player leveled up!");
+				
+			}else{
+				leveling = false;
+				console.log("Player didnt level up!" + Player.list[i].experience +" / "+ Math.floor(XPBASE*(Math.pow(Player.list[i].level, XPFACTOR))));
+			}
+		}
+		
+		leveling = true;
+		if(!Player.list[i].didSnatch){
+			Player.list[i].bodyExperience += bodyExpReward;
+			while(leveling){
+				if(Player.list[i].bodyExperience >= Math.floor(XPBASE*(Math.pow(Player.list[i].bodyLevel, XPFACTOR)))){
+					Player.list[i].bodyLevel++;
+					SOCKET_LIST[Player.list[i].id].emit('levelUp', {
+						id:Player.list[i].id,
+						soul:false,
+						body:true,			
+					});
+					Player.ChangeBody(Player.list[i].id);
+					console.log("Players body leveled up, body has level bonuses of " + Player.list[i].body.levelBonuses[0] +"/"+ Player.list[i].body.levelBonuses[1] +"/"+ Player.list[i].body.levelBonuses[2]+"/"+ Player.list[i].body.levelBonuses[3]);
+				}else{
+					leveling = false;
+					console.log("Players body didnt level up!" + Player.list[i].bodyExperience +" / "+ Math.floor(XPBASE*(Math.pow(Player.list[i].bodyLevel, XPFACTOR))));
+				}
+			}
+		}else{
+			console.log("Player snatched a body so he is not given any body xp from this battle!");
+		}
+		Player.list[i].gold += goldReward;
+		
+	}
 	
 	setTimeout(function(){
 		for(var i in SOCKET_LIST){
-			var socket = SOCKET_LIST[i]
+			var socket = SOCKET_LIST[i];
+			
+
 			socket.emit('showRewards', {
-				exp:experienceReward,
+				soulexp:soulExpReward,
+				bodyexp:bodyExpReward,
 				gold:goldReward,
-				
+				didSnatch:Player.list[socket.id].didSnatch,
 			});
+			console.log(Player.list[socket.id].didSnatch + " did snatch");
+			if(Player.list[socket.id].didSnatch)
+				Player.list[i].didSnatch = false;
 		}
 		console.log("Rewards sent to players, ready to clear out enemies!");
+		
 		Enemy.ClearEnemyList();
 		Enemy.list = [];
 		Enemy.ClearInitPack();

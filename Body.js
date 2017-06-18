@@ -6,6 +6,8 @@ var Body = function(param){
 		APMax:0,
 		dieSize:0,
 		dieAmount:0,
+		maxLevel:0,
+		levelBonuses:[],
 	}
 	if(param){
 		if(param.name)
@@ -20,7 +22,10 @@ var Body = function(param){
 			self.dieSize = param.dieSize;	
 		if(param.dieAmount)
 			self.dieAmount = param.dieAmount;	
-		
+		if(param.maxLevel)
+			self.maxLevel = param.maxLevel;	
+		if(param.levelBonuses)
+			self.levelBonuses = param.levelBonuses;	
 	}
 	//console.log("Created Entity id:" + self.id + "\nhealthMax: " + self.healthMax + "\nAPMax: " + self.APMax+ "\ndieSize: " + self.dieSize+ "\ndieAmount: " + self.dieAmount);
 	return self;
@@ -38,6 +43,8 @@ Body.getBody = function(difficulty){
 
 Body.list = [];
 //LIST ALL BODIES HERE
+//LEVEL BONUSES ARE
+//0 HEALTH, 1 APMAX, 2 DIESIZE, 3 DIEAMOUNT!
 Body.Wisp = Body({
 	name:"Wisp",
 	id:0,
@@ -45,6 +52,9 @@ Body.Wisp = Body({
 	APMax: 10,
 	dieSize: 3,
 	dieAmount: 1,
+	maxLevel: 5,
+	levelBonuses: [ 20, 2, 2, 0 ],
+		
 });
 Body.list.push(Body.Wisp);
 
@@ -55,6 +65,8 @@ Body.Squirrel = Body({
 	APMax: 11,
 	dieSize: 5,
 	dieAmount: 1,
+	maxLevel: 6,
+	levelBonuses: [ 25, 3, 2, 1 ],
 });
 Body.list.push(Body.Squirrel);
 
@@ -65,18 +77,22 @@ Body.Deer = Body({
 	APMax: 12,
 	dieSize: 6,
 	dieAmount: 1,
+	maxLevel: 7,
+	levelBonuses: [ 30, 3, 3, 1 ],
 });
 Body.list.push(Body.Deer);
 
-Body.Hedgehod = Body({
-	name:"Hedgehod",
+Body.Hedgehog = Body({
+	name:"Hedgehog",
 	id:3,
 	healthMax: 80,
 	APMax: 13,
 	dieSize: 3,
 	dieAmount: 2,
+	maxLevel: 8,
+	levelBonuses: [ 35, 4, 2, 2 ],
 });
-Body.list.push(Body.Hedgehod);
+Body.list.push(Body.Hedgehog);
 
 Body.Smallsnake = Body({
 	name:"Small snake",
@@ -85,6 +101,8 @@ Body.Smallsnake = Body({
 	APMax: 14,
 	dieSize: 5,
 	dieAmount: 2,
+	maxLevel: 9,
+	levelBonuses: [ 40, 5, 3, 2 ],
 });
 Body.list.push(Body.Smallsnake);
 

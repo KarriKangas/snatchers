@@ -1,35 +1,53 @@
 var Entity = require('./Entity.js');
 var Enemy = require('./Enemy.js');
 var Body = require('./Body.js');
-console.log("PLAYER: " + Body.Deer.name);
+
 var Player = function(param){
 	var self = Entity(param);
 	self.target = null;
 	self.ready = false;
 	self.readyGoBattle = false;
 	self.partyLeader = false;
+	self.didSnatch = false;
 	self.experience = 0;
 	self.gold = 0;
 	self.level = 1;
 	console.log("This is connected players id: " + param.id);
-	self.healthMax+=100;
-	self.healthCurrent+=100;
+	self.healthMax = 0;
+	self.healthCurrent= 0;
+	self.bodyLevel = 1;
+	self.bodyExperience = 0;
 	
+	//Soul stats
+	self.soulDamage = 5;
+	self.soulHealth = 5;
+	self.soulAP = 5;
+	self.soulPoints = 5;
+	
+	//THIS IS JUST FOR TESTING BEFORE DATABASE IMPLEMENTATION
+	if(!self.body)
+		self.body = Body.Wisp;
 	self.getInitPack = function(){
 		return {
 			id:self.id,
-			body:Body.Wisp,
-			healthMax:self.healthMax,
-			healthCurrent:self.healthCurrent,
-			APMax:self.APMax,
+			body:self.body,
+			healthMax:self.body.healthMax + (self.bodyLevel*self.body.levelBonuses[0]),
+			healthCurrent:self.body.healthMax,
+			APMax:self.APMax + (self.bodyLevel*self.body.levelBonuses[1]),
 			APCurrent:self.APCurrent,
-			dieSize:self.dieSize,
-			dieAmount:self.dieAmount,
+			dieSize:self.dieSize + (self.bodyLevel*self.body.levelBonuses[2]),
+			dieAmount:self.dieAmount + (self.bodyLevel*self.body.levelBonuses[3]),
 			readyGoBattle:self.readyGoBattle,
 			partyLeader:self.partyLeader,
 			experience:self.experience,
 			gold:self.gold,
 			level:self.level,
+			bodyLevel:self.bodyLevel,
+			bodyExperience:self.bodyExperience,
+			soulDamage: self.soulDamage,
+			soulHealth: self.soulHealth,
+			soulAP: self.soulAP,
+			soulPoints: self.soulPoints,
 		};
 	}
 	
@@ -45,9 +63,10 @@ var Player = function(param){
 			dieAmount:self.dieAmount,
 		};
 	}
-	
+	//Change body to update values
+
 	Player.list[self.id] = self;
-	
+	Player.ChangeBody(self.id);
 	if(Player.getPlayerCount() == 1)
 		self.partyLeader = true;
 	
@@ -55,7 +74,7 @@ var Player = function(param){
 	return self;
 	
 }
-Player.one = 100;
+
 Player.list = {};
 
 //THIS SHOULD BE CHANGED TO REFLECT DATABASE
@@ -63,10 +82,10 @@ Player.onConnect = function(socket){
 	var player = Player({
 		id:socket.id,
 		body:Body.Wisp,
-		healthMax: Body.Wisp.healthMax+100,
-		APMax: Body.Wisp.APMax+10,
-		dieSize: Body.Wisp.dieSize+5,
-		dieAmount: Body.Wisp.dieAmount+3,
+		healthMax: Body.Wisp.healthMax,
+		APMax: Body.Wisp.APMax,
+		dieSize: Body.Wisp.dieSize,
+		dieAmount: Body.Wisp.dieAmount,
 	});
 		
 	socket.emit('init',{
@@ -107,6 +126,20 @@ Player.onDisconnect = function(socket){
 	}
 	delete Player.list[socket.id];
 	Player.removePack.push(socket.id);
+}
+
+Player.ChangeBody = function(id){
+	console.log("BEFORE " + Player.list[id].healthMax +" / "+ Player.list[id].dieSize +" / "+ Player.list[id].dieAmount +" / "+ Player.list[id].APMax);
+	var body = Player.list[id].body;
+
+	Player.list[id].healthMax = body.healthMax + (Player.list[id].bodyLevel*body.levelBonuses[0]);
+	Player.list[id].healthCurrent = Player.list[id].healthMax;
+	Player.list[id].dieSize = body.dieSize + (Player.list[id].bodyLevel*body.levelBonuses[2]);
+	Player.list[id].dieAmount = body.dieAmount + (Player.list[id].bodyLevel*body.levelBonuses[3]);
+	Player.list[id].APMax = body.APMax + (Player.list[id].bodyLevel*body.levelBonuses[1]);
+
+	console.log("AFTER " + Player.list[id].healthMax +" / "+ Player.list[id].dieSize +" / "+ Player.list[id].dieAmount +" / "+ Player.list[id].APMax);
+	console.log("So, now player " + id + " should have " + Player.list[id].healthMax + " health");
 }
 
 Player.update = function(socket){
