@@ -147,6 +147,24 @@
 			
 			});
 			
+			socket.on('releaseSuccess', function(data){
+				Player.list[data.id].body = data.body;
+				Player.list[data.id].bodyLevel = 1;
+				Player.list[data.id].bodyExperience = 0;
+				Player.list[data.id].Sprite = PIXI.Sprite.fromImage('client/img/Battle/' + data.body.name +'.png');
+			
+			});
+			
+			socket.on('releaseStatSuccess', function(data){
+				Player.list[data.id].soulPoints = data.soulPoints;
+				Player.list[data.id].soulDamage = data.soulDamage;
+				Player.list[data.id].soulHealth = data.soulHealth;
+				Player.list[data.id].soulAP = data.soulAP;
+				Drawer.refreshSoulTexts();
+				
+			});
+			
+			
 		var selfId = null;	
 		socket.on('init',function(data){	
 			if(data.selfId)

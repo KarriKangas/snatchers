@@ -51,7 +51,9 @@ var Drawer = function(){
 	
 	var PlusButton =  PIXI.Sprite.fromImage('client/img/Menu/Char/PlusButton.png');
 	var MinusButton =  PIXI.Sprite.fromImage('client/img/Menu/Char/MinusButton.png');
+	var PlusMinusList = [];
 	
+	var ReleaseContinue = PIXI.Sprite.fromImage('client/img/Battle/ContinueButton.png');
 	
 		//TEXT STYLES HERE
 	var healthStyle = new PIXI.TextStyle({
@@ -81,11 +83,19 @@ var Drawer = function(){
 	var bodyText = new PIXI.Text('', menuStyle);
 	var soulText = new PIXI.Text('', menuStyle);
 	var totalText = new PIXI.Text('', menuStyle);
+	
 	//RELEASE TEXTS
 	var ReleaseText = new PIXI.Text('', menuStyle);
 	var Reset = new PIXI.Text('', menuStyle);	
+	var ResetPoints = new PIXI.Text('', menuStyle);	
+	var ResetDamage = new PIXI.Text('', menuStyle);	
+	var ResetHealth = new PIXI.Text('', menuStyle);	
+	var ResetAP = new PIXI.Text('', menuStyle);	
 	
-	//MENU BUTTONS
+	//init plusminus list for reset
+	SetupPlusMinusList();
+	
+	//START MENU BUTTONS
 	BattleButton.on('pointerdown', () => {
 		socket.emit('goBattle', {
 			id:selfId,
@@ -98,18 +108,6 @@ var Drawer = function(){
 			
 	CharBackButton.on('pointerdown', () => {
 		Drawer.initMenu();		
-	});
-	
-	ReleaseButton.on('pointerdown',() => {
-		Drawer.initReleaseConfirm();
-	});
-	
-	YesButton.on('pointerdown',() => {
-		Drawer.initReset();
-	});
-	
-	NoButton.on('pointerdown',() => {
-		Drawer.initChar();
 	});
 	
 	EasyButton.on('pointerdown', () => {
@@ -133,6 +131,79 @@ var Drawer = function(){
 		});
 	});
 	
+	//RESET MENU BUTTONS
+	ReleaseButton.on('pointerdown',() => {
+		Drawer.initReleaseConfirm();
+		
+	});
+	
+	YesButton.on('pointerdown',() => {
+		Drawer.initReset();
+		socket.emit('confirmRelease',{
+			id:selfId,
+		});
+	});
+	
+	NoButton.on('pointerdown',() => {
+		Drawer.initChar();
+	});
+	
+	PlusMinusList[0].on('pointerdown', () => {
+		socket.emit('releaseStatChange',{
+			id:selfId,
+			stat:'damage',
+			plus: true,
+		});					
+	});	
+	
+	PlusMinusList[1].on('pointerdown', () => {
+		socket.emit('releaseStatChange',{
+			id:selfId,
+			stat:'damage',
+			plus: false,
+		});					
+	});	
+	
+	PlusMinusList[2].on('pointerdown', () => {
+		socket.emit('releaseStatChange',{
+			id:selfId,
+			stat:'health',
+			plus: true,
+		});					
+	});	
+	
+	PlusMinusList[3].on('pointerdown', () => {
+		socket.emit('releaseStatChange',{
+			id:selfId,
+			stat:'health',
+			plus: false,
+		});					
+	});	
+	
+	PlusMinusList[4].on('pointerdown', () => {
+		socket.emit('releaseStatChange',{
+			id:selfId,
+			stat:'ap',
+			plus: true,
+		});					
+	});	
+	
+	PlusMinusList[5].on('pointerdown', () => {
+		socket.emit('releaseStatChange',{
+			id:selfId,
+			stat:'ap',
+			plus: false,
+		});					
+	});	
+	
+	//LOOPHOLE, IF PLAYERS DISABLE THIS MENU OTHERWISE, THEY WILL REMAIN "resetted" AND CAN ALLOCATE SOULPOINTS WITHOUT BODY RESET!!!
+	ReleaseContinue.on('pointerdown', () => {
+		Drawer.initChar();
+		socket.emit('releaseContinue', {
+			id:selfId,
+		});
+		
+	});
 	//BATTLE BUTTONS
 	Rdybutton.on('pointerdown', () => {
 		if(playerTurn){
@@ -434,10 +505,11 @@ var Drawer = function(){
 		console.log("for Player " + selfId + " ----- " +Player.list[selfId].bodyLevel + " is bodylevel " + Player.list[selfId].bodyExperience + " is bodyexp" );
 		var Body = Player.list[selfId].body;
 		bodyText.text = "BODY STATS"
+		+"\n\nCurrent body: " + Player.list[selfId].body.name
 		+"\nDamage: " + (Body.dieAmount + (Player.list[selfId].bodyLevel*Body.levelBonuses[3])) + "d" + (Body.dieSize + (Player.list[selfId].bodyLevel*Body.levelBonuses[2]))
 		+"\nHealth: " + (Player.list[selfId].body.healthMax + (Player.list[selfId].bodyLevel*Body.levelBonuses[0]))
 		+"\nAction Points: " + (Body.APMax + (Player.list[selfId].bodyLevel*Body.levelBonuses[1]))
-		+"\nBody level: " + Player.list[selfId].bodyLevel + "/" + Body.maxLevel
+		+"\n\nBody level: " + Player.list[selfId].bodyLevel + "/" + Body.maxLevel
 		+"\nBody experience: " + Player.list[selfId].bodyExperience + "/" + Math.floor(50*(Math.pow(Player.list[selfId].bodyLevel, 2.5)))
 		+"\n\n---Everything else---";
 		bodyText.x = 34;
@@ -446,11 +518,12 @@ var Drawer = function(){
 		
 
 		soulText.text = "SOUL STATS"
-		+"\nSoul Level: " + Player.list[selfId].level
+		+"\n\nSoul Level: " + Player.list[selfId].level
 		+"\nSoul experience: " + Player.list[selfId].experience + "/" +  Math.floor(50*(Math.pow(Player.list[selfId].level, 2.5)))
-		+"\nDamage: + "+ Player.list[selfId].soulDamage*100 +"%"
-		+"\nHealth: + "+ Player.list[selfId].soulHealth*100 +"%"
-		+"\nAction Points: + "+ Player.list[selfId].soulAP*100 +"%"
+		+"\nSoul points: " + Player.list[selfId].soulPoints
+		+"\n\nDamage: + "+ Math.round(Player.list[selfId].soulDamage*100) +"%"
+		+"\nHealth: + "+ Math.round(Player.list[selfId].soulHealth*100) +"%"
+		+"\nAction Points: + "+ Math.round(Player.list[selfId].soulAP*100) +"%"
 		+"\n\n---Everything else---";
 		soulText.x = 300;
 		soulText.y = 25;
@@ -458,9 +531,9 @@ var Drawer = function(){
 		
 
 		totalText.text = "TOTAL STATS"
-		+"\nDamage: " + (Body.dieAmount + (Player.list[selfId].bodyLevel*Body.levelBonuses[3])) + "d" + (Body.dieSize + (Player.list[selfId].bodyLevel*Body.levelBonuses[2]) + Player.list[selfId].soulDamage*100 +"%")
-		+"\nHealth: " + (Player.list[selfId].body.healthMax + (Player.list[selfId].bodyLevel*Body.levelBonuses[0])+ Player.list[selfId].soulHealth*100 +"%")
-		+"\nAction Points: " + (Body.APMax + (Player.list[selfId].bodyLevel*Body.levelBonuses[1])+ Player.list[selfId].soulAP*100 +"%")
+		+"\n\nDamage: " + (Body.dieAmount + (Player.list[selfId].bodyLevel*Body.levelBonuses[3])) + "d" + (Body.dieSize + (Player.list[selfId].bodyLevel*Body.levelBonuses[2]) +" + "+ Player.list[selfId].soulDamage*100 +"%")
+		+"\nHealth: " + (Player.list[selfId].body.healthMax + (Player.list[selfId].bodyLevel*Body.levelBonuses[0])+" + "+ Player.list[selfId].soulHealth*100 +"%")
+		+"\nAction Points: " + (Body.APMax + (Player.list[selfId].bodyLevel*Body.levelBonuses[1]) +" + "+ Player.list[selfId].soulAP*100 +"%")
 		+"\n\nGold: " + Player.list[selfId].gold
 		+"\n\n---Everything else---";
 		totalText.x = 566;
@@ -480,11 +553,6 @@ var Drawer = function(){
 		ReleaseButton.x = 399;
 		ReleaseButton.y = 550;
 		pixi.stage.addChild(ReleaseButton);
-		
-		console.log(Player.list[selfId].body.name + " what?");
-		console.log(Player.list[selfId].dieAmount + " what?");
-		console.log(Player.list[selfId].dieSize + " what?");
-		console.log(Player.list[selfId].healthMax + " what?");
 		
 	}
 	
@@ -561,10 +629,75 @@ var Drawer = function(){
 	}
 	
 	Drawer.initReset = function(){
-		Reset.anchor.set(0.5);
-		Reset.x = 400;
-		Reset.y = 300;
-		pixi.stage.addChild(Reset);
+		ResetPanel.anchor.set(0.5);
+		ResetPanel.x = 400;
+		ResetPanel.y = 300;
+		pixi.stage.addChild(ResetPanel);
 		
+		for(var i = 0; i < 6; i++){
+			pixi.stage.addChild(PlusMinusList[i]);
+		}
+		
+		ReleaseContinue.interactive = true;
+		ReleaseContinue.buttonMode = true;
+		ReleaseContinue.anchor.set(0.5);
+		ReleaseContinue.x = 390;
+		ReleaseContinue.y = 430;
+		ReleaseContinue.scale.x = 0.75;
+		ReleaseContinue.scale.y = 0.75;
+		pixi.stage.addChild(ReleaseContinue);	
+		
+		
+		ResetPoints.text = ('Soul points to spend ' +  Player.list[selfId].soulPoints);
+		ResetPoints.anchor.set(0.5);
+		ResetPoints.x = 390;
+		ResetPoints.y = 160;
+		pixi.stage.addChild(ResetPoints);
+		
+		ResetDamage.text = ('Soul damage: ' + Math.round(Player.list[selfId].soulDamage*100) + '%');
+		ResetDamage.anchor.set(0.5);
+		ResetDamage.x = 300;
+		ResetDamage.y = 220;
+		pixi.stage.addChild(ResetDamage);
+		
+		ResetHealth.text = ('Soul health: ' + Math.round(Player.list[selfId].soulHealth*100) + '%');
+		ResetHealth.anchor.set(0.5);
+		ResetHealth.x = 300;
+		ResetHealth.y = 300;
+		pixi.stage.addChild(ResetHealth);
+		
+		ResetAP.text = ('Soul AP: ' + Math.round(Player.list[selfId].soulAP*100) + '%');
+		ResetAP.anchor.set(0.5);
+		ResetAP.x = 300;
+		ResetAP.y = 380;
+		pixi.stage.addChild(ResetAP);
+		
+		
+	}
+	
+	Drawer.refreshSoulTexts = function(){
+		ResetPoints.text = ('Soul points to spend ' +  Player.list[selfId].soulPoints);
+		ResetDamage.text = ('Soul damage: ' + Math.round(Player.list[selfId].soulDamage*100) + '%');
+		ResetHealth.text = ('Soul health: ' + Math.round(Player.list[selfId].soulHealth*100) + '%');
+		ResetAP.text = ('Soul AP: ' + Math.round(Player.list[selfId].soulAP*100) + '%');
+	}
+	
+	function SetupPlusMinusList(){
+		for(var i = 0; i < 6; i++){
+			var tempButton;
+			if(i%2 != 0)
+				tempButton = PIXI.Sprite.fromImage('client/img/Menu/Char/PlusButton.png');
+			else
+				tempButton = PIXI.Sprite.fromImage('client/img/Menu/Char/MinusButton.png');
+			
+			tempButton.anchor.set(0.5);
+			tempButton.x = 550 - (i%2)*40;
+			tempButton.y = 220 + Math.floor((i/2))*80;
+			tempButton.interactive = true;
+			tempButton.buttonMode = true;
+			
+			PlusMinusList[i] = tempButton;
+			console.log("plusminus added");
+		}
 		
 	}

@@ -4,11 +4,13 @@ var Body = require('./Body.js');
 
 var Player = function(param){
 	var self = Entity(param);
-	self.target = null;
-	self.ready = false;
-	self.readyGoBattle = false;
-	self.partyLeader = false;
-	self.didSnatch = false;
+	
+	self.target = null; //Player target in battle
+	self.ready = false; //is player ready in battle
+	self.readyGoBattle = false; //is player ready in menu
+	self.partyLeader = false; //is player partyleader
+	self.didSnatch = false; //did player snatch a new body in this battle
+	self.released = false; //has player released his current body to spend soul points
 	self.experience = 0;
 	self.gold = 0;
 	self.level = 1;
@@ -19,10 +21,10 @@ var Player = function(param){
 	self.bodyExperience = 0;
 	
 	//Soul stats
-	self.soulDamage = 5;
-	self.soulHealth = 5;
-	self.soulAP = 5;
-	self.soulPoints = 5;
+	self.soulDamage = 5.0;
+	self.soulHealth = 5.0;
+	self.soulAP = 5.0;
+	self.soulPoints = 5.0;
 	
 	//THIS IS JUST FOR TESTING BEFORE DATABASE IMPLEMENTATION
 	if(!self.body)

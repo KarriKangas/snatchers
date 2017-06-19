@@ -13,6 +13,9 @@ var Entity = require('./Entity.js');
 var Player = require('./Player.js');
 var Enemy = require('./Enemy.js');
 
+//This line was added...
+var Body = require('./Body.js');
+
 const XPBASE = 50;
 const XPFACTOR = 2.5;
 
@@ -30,11 +33,13 @@ var playerTurn = true;
 var enemyTimer = 0;
 SOCKET_LIST = {};
 
+//On player connect
 io.sockets.on('connection', function(socket){
 	socket.id = Math.random();
 	SOCKET_LIST[socket.id] = socket;
 	Player.onConnect(socket);
 	
+	//On player disconnect
 	socket.on('disconnect', function(){
 		delete SOCKET_LIST[socket.id];
 		Player.onDisconnect(socket);
@@ -42,6 +47,8 @@ io.sockets.on('connection', function(socket){
 		
 	});
 	
+	//On player "battle" -ready click
+	//If all players ready: Display for party leader!
 	socket.on('goBattle',function(data){
 		if(Player.list[data.id].readyGoBattle != true){
 			Player.list[data.id].readyGoBattle = true;
@@ -54,7 +61,6 @@ io.sockets.on('connection', function(socket){
 				
 			}
 			console.log(Player.list[data.id].id + " is now ready for battle!");
-			console.log(SOCKET_LIST[data.id].id + " is now ready for battle!");
 		}
 		
 		for(var i in Player.list){
@@ -72,9 +78,9 @@ io.sockets.on('connection', function(socket){
 		}
 
 		console.log(Player.list[data.id].id + " is now ready for battle!");
-		console.log(SOCKET_LIST[data.id].id + " is now ready for battle!");
 	});
 	
+	//Battle starting 
 	socket.on('startBattle', function(data){
 		console.log("startBattle received from: " + data.sender);
 		if(Player.list[data.sender].partyLeader && Player.ArePlayersGoReady()){
@@ -87,6 +93,7 @@ io.sockets.on('connection', function(socket){
 		}
 	});
 	
+	//Attack click in battle
 	socket.on("atk", function(data){
 		console.log(Player.list[data.id].target + " and " + Player.list[data.id].APCurrent);
 		//ID > 5 means target is an enemy, enemy random id's always come with a +5
@@ -142,6 +149,7 @@ io.sockets.on('connection', function(socket){
 		}
 	});
 	
+	//Snatch in battle
 	socket.on("snatch", function(data){
 		//CHECK SNATCH REQUIREMENTS!!!
 		//1)PLAYER HAS A TARGET!
@@ -185,6 +193,7 @@ io.sockets.on('connection', function(socket){
 		//console.log("Inventory click by " + data.id);
 	});
 	
+	//Ready in battle
 	socket.on("rdy", function(data){
 		if(Player.list[data.id].ready)
 			Player.list[data.id].ready = false;
@@ -213,6 +222,7 @@ io.sockets.on('connection', function(socket){
 		initiateEnemyBehavior();	
 	});
 	
+	//Selection in battle
 	socket.on("selection", function(data){
 		console.log("Player " + data.player + " selected " + data.target);
 		Player.list[data.player].target = data.target;
@@ -225,6 +235,64 @@ io.sockets.on('connection', function(socket){
 			});
 		}
 	});	
+	
+	//Menu stuff below
+	socket.on('confirmRelease', function(data){
+		Player.list[data.id].released = true;
+		Player.list[data.id].body = Body.Wisp;
+		Player.list[data.id].bodyExperience = 0;
+		Player.list[data.id].bodyLevel = 1;
+		socket.emit('releaseSuccess', {
+			id:data.id,
+			body:Body.Wisp,
+		});
+	});
+	
+	socket.on('releaseStatChange', function(data){
+		if(Player.list[data.id].released){
+			if(!data.plus && Player.list[data.id].soulPoints <= 0)
+				return;
+			
+			var toAdd = 0;
+			if(!data.plus){
+				toAdd = 0.05;
+				Player.list[data.id].soulPoints--;
+			}
+			if(data.plus){
+				toAdd = -0.05;
+				Player.list[data.id].soulPoints++;
+			}
+			
+			switch(data.stat){
+				case "damage":
+					Player.list[data.id].soulDamage += toAdd;
+					break;
+				
+				case "health":
+					Player.list[data.id].soulHealth += toAdd;
+					break;
+				
+				case "ap":
+					Player.list[data.id].soulAP += toAdd;
+					break;
+				
+			}
+			socket.emit('releaseStatSuccess', {
+				id:data.id,
+				soulPoints:Player.list[data.id].soulPoints,
+				soulDamage:Player.list[data.id].soulDamage,
+				soulHealth:Player.list[data.id].soulHealth,
+				soulAP:Player.list[data.id].soulAP,
+			});
+		}
+			
+	});
+	
+	socket.on('releaseContinue', function(data){
+		Player.list[data.id].released = false;
+	});
+	
+	
 });
 var PlayerInitPack = Player.initPack;
 var EnemyInitPack = Enemy.initPack;
