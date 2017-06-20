@@ -241,6 +241,7 @@
 		});
 		
 		socket.on('enemyDeath', function(data){
+			console.log("Enemy was killed");
 			setTimeout(function(){
 				Enemy.list[data.id].Sprite = Enemy.list[data.id].DeadSprite;
 				Enemy.list[data.id].healthCurrent = 0;

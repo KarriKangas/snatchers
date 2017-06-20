@@ -278,14 +278,17 @@ var Drawer = function(){
 					Enemy.list[i].Sprite.x = 700;
 					Enemy.list[i].Sprite.y = 50+100*Enemy.getEnemyListPosition(Enemy.list[i].id);
 					
-				pixi.stage.addChild(Enemy.list[i].Sprite);
+					pixi.stage.addChild(Enemy.list[i].Sprite);
 				
-				Enemy.list[i].healthText.x = 650;
-				Enemy.list[i].healthText.y = 50+100*Enemy.getEnemyListPosition(Enemy.list[i].id);
-				Enemy.list[i].healthText.fill = '#FFFFFF';
 				
-				pixi.stage.addChild(Enemy.list[i].Sprite);
-				pixi.stage.addChild(Enemy.list[i].healthText);
+				
+				
+					Enemy.list[i].healthText.x = 650;
+					Enemy.list[i].healthText.y = 50+100*Enemy.getEnemyListPosition(Enemy.list[i].id);
+					Enemy.list[i].healthText.fill = '#FFFFFF';
+					
+					pixi.stage.addChild(Enemy.list[i].Sprite);
+					pixi.stage.addChild(Enemy.list[i].healthText);
 				
 				}
 			}
@@ -531,9 +534,9 @@ var Drawer = function(){
 		
 
 		totalText.text = "TOTAL STATS"
-		+"\n\nDamage: " + (Body.dieAmount + (Player.list[selfId].bodyLevel*Body.levelBonuses[3])) + "d" + (Body.dieSize + (Player.list[selfId].bodyLevel*Body.levelBonuses[2]) +" + "+ Player.list[selfId].soulDamage*100 +"%")
-		+"\nHealth: " + (Player.list[selfId].body.healthMax + (Player.list[selfId].bodyLevel*Body.levelBonuses[0])+" + "+ Player.list[selfId].soulHealth*100 +"%")
-		+"\nAction Points: " + (Body.APMax + (Player.list[selfId].bodyLevel*Body.levelBonuses[1]) +" + "+ Player.list[selfId].soulAP*100 +"%")
+		+"\n\nDamage: " + (Body.dieAmount + (Player.list[selfId].bodyLevel*Body.levelBonuses[3])) + "d" + (Body.dieSize + (Player.list[selfId].bodyLevel*Body.levelBonuses[2]) +" + "+ Math.round(Player.list[selfId].soulDamage*100) +"%")
+		+"\nHealth: " + (Player.list[selfId].body.healthMax + (Player.list[selfId].bodyLevel*Body.levelBonuses[0])+" + "+ Math.round(Player.list[selfId].soulHealth*100) +"%")
+		+"\nAction Points: " + (Body.APMax + (Player.list[selfId].bodyLevel*Body.levelBonuses[1]) +" + "+ Math.round(Player.list[selfId].soulAP*100) +"%")
 		+"\n\nGold: " + Player.list[selfId].gold
 		+"\n\n---Everything else---";
 		totalText.x = 566;

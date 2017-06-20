@@ -16,6 +16,7 @@ var Enemy = require('./Enemy.js');
 //This line was added...
 var Body = require('./Body.js');
 
+var Attack = require('./Attack.js');
 const XPBASE = 50;
 const XPFACTOR = 2.5;
 
@@ -95,57 +96,34 @@ io.sockets.on('connection', function(socket){
 	
 	//Attack click in battle
 	socket.on("atk", function(data){
-		console.log(Player.list[data.id].target + " and " + Player.list[data.id].APCurrent);
-		//ID > 5 means target is an enemy, enemy random id's always come with a +5
-		if(Player.list[data.id].target != null && Player.list[data.id].target > 5){
-			var attacker = Player.list[data.id];
-			if(attacker.APCurrent >= 5){
-				var damage = attacker.dieAmount * (Math.floor(Math.random()*(attacker.dieSize-1)+1));
-				console.log("PLAYER IS ABOUT TO DEAL " + damage + " DAMAGE");
-				damage = damage+damage*attacker.soulDamage;
-				console.log("AFTER APPLYING SOUL BONUS, DAMAGE IS " + damage);
-				attacker.APCurrent-=5;
-				Enemy.list[attacker.target].healthCurrent -= damage;
-				
-				console.log("Rolling " + attacker.dieAmount + " dices of size " + attacker.dieSize);
-				console.log(attacker.id + " attacked " + attacker.target + " for " + damage + ". Target now has " + Enemy.list[attacker.target].healthCurrent + " health." + " Attacker now has " + attacker.APCurrent + " AP.");
-				
-				for(var i in SOCKET_LIST){
-					var Asocket = SOCKET_LIST[i];
-					Asocket.emit("atkConfirm", {
-						player:data.id,
-						target:attacker.target,							
-					});
-				}
-				
-				if(Enemy.list[attacker.target].healthCurrent <= 0){
-					console.log("An enemy has been slain");
-					Enemy.list[attacker.target].healthCurrent = 0;
-					Enemy.list[attacker.target].APCurrent = 0;
-					Enemy.list[attacker.target].APMax = 0;
-					Enemy.list[attacker.target].toDie = true;
-					
-					for(var i in SOCKET_LIST){
-						var Asocket = SOCKET_LIST[i];
-						Asocket.emit("enemyDeath", {
-							id:attacker.target,							
-						});
-					}
-				
-					for(var i in Player.list){
-						if(Player.list[data.id].target == attacker.target)
-							Player.list[i].target = null;
-					}			
-				}
-				
-				for(var i in Enemy.list){
-					if(!Enemy.list[i].toDie)
-						return;
-					
-				}
-				console.log("All enemies dead, display rewards");
-				createRewards();
+		var attack = Attack({
+			attacker:Player.list[data.id],
+			target:Enemy.list[Player.list[data.id].target]
+		});
+		Attack.ApplyAttack(attack.id, attack.Attacker, attack.Target);
+		
+		if(Attack.list[attack.id].success){
+			for(var i in SOCKET_LIST){
+				var Asocket = SOCKET_LIST[i];
+				Asocket.emit("atkConfirm", {
+					player:data.id,
+					target:attack.Target.id,							
+				});
 			}
+		}
+		
+		if(Attack.list[attack.id].didKill){
+			for(var i in SOCKET_LIST){
+				var Asocket = SOCKET_LIST[i];
+					Asocket.emit("enemyDeath", {
+						id:attack.Target.id,							
+				});
+			}		
+		}		
+
+		if(Enemy.AreEnemiesDead()){
+			console.log("All enemies dead, display rewards");
+			createRewards();
 		}
 	});
 	
@@ -242,10 +220,13 @@ io.sockets.on('connection', function(socket){
 		Player.list[data.id].body = Body.Wisp;
 		Player.list[data.id].bodyExperience = 0;
 		Player.list[data.id].bodyLevel = 1;
-		socket.emit('releaseSuccess', {
-			id:data.id,
-			body:Body.Wisp,
-		});
+		for(var i in SOCKET_LIST){
+			var Asocket = SOCKET_LIST[i];
+			Asocket.emit('releaseSuccess', {
+				id:data.id,
+				body:Body.Wisp,
+			});
+		}
 	});
 	
 	socket.on('releaseStatChange', function(data){
@@ -277,13 +258,16 @@ io.sockets.on('connection', function(socket){
 					break;
 				
 			}
-			socket.emit('releaseStatSuccess', {
-				id:data.id,
-				soulPoints:Player.list[data.id].soulPoints,
-				soulDamage:Player.list[data.id].soulDamage,
-				soulHealth:Player.list[data.id].soulHealth,
-				soulAP:Player.list[data.id].soulAP,
-			});
+			for(var i in SOCKET_LIST){
+				var Asocket = SOCKET_LIST[i];
+				Asocket.emit('releaseStatSuccess', {
+					id:data.id,
+					soulPoints:Player.list[data.id].soulPoints,
+					soulDamage:Player.list[data.id].soulDamage,
+					soulHealth:Player.list[data.id].soulHealth,
+					soulAP:Player.list[data.id].soulAP,
+				});
+			}
 		}
 			
 	});

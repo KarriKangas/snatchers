@@ -57,6 +57,13 @@ Enemy.Create = function(difficulty){
 	return enemy;
 }
 
+Enemy.Kill = function(id){
+	Enemy.list[id].healthCurrent = 0;
+	Enemy.list[id].APCurrent = 0;
+	Enemy.list[id].APMax = 0;
+	Enemy.list[id].toDie = true;
+}
+
 Enemy.getAllInitPack = function(){
 	var enemies = [];
 	for(var i in Enemy.list){
@@ -82,6 +89,15 @@ Enemy.AreEnemiesReady = function(){
 			//console.log("An enemy has more than 5AP... Requesting another round");
 			return false;
 		}
+	}
+	return true;
+}
+
+Enemy.AreEnemiesDead = function(){
+	for(var i in Enemy.list){
+		console.log("Is this enemy dead? " + Enemy.list[i].toDie);
+		if(!Enemy.list[i].toDie)
+			return false;
 	}
 	return true;
 }
