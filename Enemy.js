@@ -5,8 +5,8 @@ var Enemy = function(param){
 	var self = Entity(param);
 	self.target = null;
 	self.toDie = false;
+	//Random waitTime for each enemy to make game feel a bit more dynamic
 	self.waitTime = Math.random() * ((60-20)+20);	
-	
 	
 	self.getInitPack = function(){
 		return {
@@ -37,7 +37,6 @@ var Enemy = function(param){
 	console.log("Created Enemy id:" + self.id + "\nhealthMax: " + self.healthMax + "\nAPMax: " + self.APMax+ "\ndieSize: " + self.dieSize+ "\ndieAmount: " + self.dieAmount);	
 	Enemy.initPack.push(self.getInitPack());
 	return self;
-	
 }
 
 Enemy.list = {};
@@ -70,7 +69,6 @@ Enemy.getAllInitPack = function(){
 		enemies.push(Enemy.list[i].getInitPack());
 
 	}
-	//console.log(initPack);
 	return enemies;
 }
 
@@ -95,7 +93,6 @@ Enemy.AreEnemiesReady = function(){
 
 Enemy.AreEnemiesDead = function(){
 	for(var i in Enemy.list){
-		console.log("Is this enemy dead? " + Enemy.list[i].toDie);
 		if(!Enemy.list[i].toDie)
 			return false;
 	}
@@ -114,12 +111,10 @@ Enemy.GetEnemyAmount = function(){
 
 Enemy.ClearEnemyList = function(){
 	Enemy.list = [];
-	
 }
 
 Enemy.ClearInitPack = function(){
 	Enemy.initPack = [];
-	
 }
 
 Enemy.initPack = [];

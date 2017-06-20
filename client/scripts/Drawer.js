@@ -120,14 +120,14 @@ var Drawer = function(){
 	MediumButton.on('pointerdown', () => {
 		socket.emit('startBattle',{
 			sender:selfId,
-			difficulty: 2,
+			difficulty: 4,
 		});
 	});
 			
 	HardButton.on('pointerdown', () => {
 		socket.emit('startBattle',{
 			sender:selfId,
-			difficulty: 3,
+			difficulty: 6,
 		});
 	});
 	
@@ -392,7 +392,7 @@ var Drawer = function(){
 			
 			var menuUIButtons = [
 				CharacterButton,
-				MenuInvButton,
+				//MenuInvButton,
 				PartyButton,
 				BattleButton				
 			]
@@ -506,6 +506,13 @@ var Drawer = function(){
 		pixi.stage.addChild(CharImage);
 		
 		console.log("for Player " + selfId + " ----- " +Player.list[selfId].bodyLevel + " is bodylevel " + Player.list[selfId].bodyExperience + " is bodyexp" );
+		var bodyXP = ""
+		console.log(Player.list[selfId].bodyLevel + " AND " + Player.list[selfId].body.maxLevel);
+		if(Player.list[selfId].bodyLevel < Player.list[selfId].body.maxLevel)
+			bodyXP = "\nBody experience: " + Player.list[selfId].bodyExperience + "/" + Math.floor(50*(Math.pow(Player.list[selfId].bodyLevel, 2.5)));
+		else
+			bodyXP = "\nBody experience: MAX";
+		
 		var Body = Player.list[selfId].body;
 		bodyText.text = "BODY STATS"
 		+"\n\nCurrent body: " + Player.list[selfId].body.name
@@ -513,7 +520,7 @@ var Drawer = function(){
 		+"\nHealth: " + (Player.list[selfId].body.healthMax + (Player.list[selfId].bodyLevel*Body.levelBonuses[0]))
 		+"\nAction Points: " + (Body.APMax + (Player.list[selfId].bodyLevel*Body.levelBonuses[1]))
 		+"\n\nBody level: " + Player.list[selfId].bodyLevel + "/" + Body.maxLevel
-		+"\nBody experience: " + Player.list[selfId].bodyExperience + "/" + Math.floor(50*(Math.pow(Player.list[selfId].bodyLevel, 2.5)))
+		+ bodyXP
 		+"\n\n---Everything else---";
 		bodyText.x = 34;
 		bodyText.y = 200;
@@ -575,8 +582,8 @@ var Drawer = function(){
 			
 			var BattleUIbuttons = [
 				Atkbutton,
-				Skillbutton,	
-				Invbutton,
+				//Skillbutton,	
+				//Invbutton,
 				Rdybutton,
 				Snatchbutton,
 			]

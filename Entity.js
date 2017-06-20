@@ -1,3 +1,5 @@
+//BASE CLASS FOR PLAYER AND ENEMY
+//Contains base stats for an entity
 var Entity = function(param){
 	var self = {
 		id:"",

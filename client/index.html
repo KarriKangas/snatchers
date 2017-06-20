@@ -2,7 +2,7 @@
 <html>
 	<head>
 		<meta charset="utf-8">
-		<title>SoulSnatchers</title>
+		<title>Snatchers</title>
 	</head>
 	<body style="margin-left:25%; margin-top:5%; background-image: url('http://wallpapercave.com/wp/2oOGOxL.jpg')">
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/4.5.2/pixi.min.js"></script>
@@ -10,6 +10,14 @@
 	<script src="client/scripts/ClientPlayer.js"></script>
 	<script src="client/scripts/ClientEnemy.js"></script>
 	<script src="client/scripts/Drawer.js"></script>
+	
+	<div id="signDiv" style="margin:20%; display:inline-block">
+		Username: <input id="signDiv-username" type="text"></input><br>
+		Password: <input id="signDiv-password" type="password"  style="margin-top:5px; margin-left:4px;"></input><br>
+		<button id="signDiv-signIn" style="margin-left:50px; margin-top:5px;">Sign in</button>
+		<button id="signDiv-signUp" style="margin-left:50px; margin-top:5px;">Sign up</button>
+	</div>
+	
 	<body>
 	
 	</body>
@@ -17,8 +25,32 @@
 	<script>
 		var socket = io();
 		var pixi = new PIXI.Application();
-		document.body.appendChild(pixi.view);
-
+		//document.body.appendChild(pixi.view);
+		
+		//SIGN IN
+		var signDiv = document.getElementById('signDiv');
+		var signDivUsername = document.getElementById('signDiv-username');
+		var signDivSignIn = document.getElementById('signDiv-signIn');
+		var signDivSignUp = document.getElementById('signDiv-signUp');
+		var signDivPassword = document.getElementById('signDiv-password');
+		
+		signDivSignIn.onclick = function(){
+			socket.emit('signIn', {
+				username:signDivUsername.value,
+				password:signDivPassword.value,
+			});
+		}
+		
+		socket.on('signInResponse', function(data){
+			if(data.success){
+				signDiv.style.display = "none";
+				document.body.appendChild(pixi.view);
+			}else
+				alert("Sign in unsuccessful!");
+		
+		});
+		
+		
 		var playerAmount = 0;
 		var playerTurn = true;
 		var battleInited = false;

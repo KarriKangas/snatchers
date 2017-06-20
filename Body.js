@@ -106,5 +106,53 @@ Body.Smallsnake = Body({
 });
 Body.list.push(Body.Smallsnake);
 
+Body.Lizard = Body({
+	name:"Lizard",
+	id:5,
+	healthMax: 110,
+	APMax: 15,
+	dieSize: 6,
+	dieAmount: 2,
+	maxLevel: 10,
+	levelBonuses: [ 45, 5, 3, 2 ],
+});
+Body.list.push(Body.Lizard);
+
+Body.Slime = Body({
+	name:"Slime",
+	id:6,
+	healthMax: 120,
+	APMax: 14,
+	dieSize: 5,
+	dieAmount: 2,
+	maxLevel: 11,
+	levelBonuses: [ 40, 5, 3, 2 ],
+});
+Body.list.push(Body.Slime);
+
+Body.Rat = Body({
+	name:"Rat",
+	id:7,
+	healthMax: 140,
+	APMax: 14,
+	dieSize: 5,
+	dieAmount: 2,
+	maxLevel: 12,
+	levelBonuses: [ 40, 5, 3, 2 ],
+});
+Body.list.push(Body.Rat);
+
+Body.Turtle = Body({
+	name:"Turtle",
+	id:8,
+	healthMax: 150,
+	APMax: 14,
+	dieSize: 5,
+	dieAmount: 2,
+	maxLevel: 13,
+	levelBonuses: [ 40, 5, 3, 2 ],
+});
+Body.list.push(Body.Turtle);
+
 	
 module.exports = Body;

@@ -48,6 +48,15 @@ io.sockets.on('connection', function(socket){
 		
 	});
 	
+	//SIGN IN STUFF
+	socket.on('signIn', function(data){
+		
+		socket.emit('signInResponse', {
+			success:true,
+			
+		});
+	});
+	
 	//On player "battle" -ready click
 	//If all players ready: Display for party leader!
 	socket.on('goBattle',function(data){
@@ -96,12 +105,15 @@ io.sockets.on('connection', function(socket){
 	
 	//Attack click in battle
 	socket.on("atk", function(data){
+		//Create a new attack with attacker + target
 		var attack = Attack({
 			attacker:Player.list[data.id],
 			target:Enemy.list[Player.list[data.id].target]
 		});
+		//Apply this attack
 		Attack.ApplyAttack(attack.id, attack.Attacker, attack.Target);
 		
+		//If the attack was a success (had target, hit, etc) send confirmation to clients
 		if(Attack.list[attack.id].success){
 			for(var i in SOCKET_LIST){
 				var Asocket = SOCKET_LIST[i];
@@ -112,6 +124,7 @@ io.sockets.on('connection', function(socket){
 			}
 		}
 		
+		//If the attack killed the target, send enemyDeath to clients
 		if(Attack.list[attack.id].didKill){
 			for(var i in SOCKET_LIST){
 				var Asocket = SOCKET_LIST[i];
@@ -120,7 +133,8 @@ io.sockets.on('connection', function(socket){
 				});
 			}		
 		}		
-
+		
+		//After every attack, check if all enemies are dead 
 		if(Enemy.AreEnemiesDead()){
 			console.log("All enemies dead, display rewards");
 			createRewards();
@@ -157,8 +171,6 @@ io.sockets.on('connection', function(socket){
 					Player.ChangeBody(data.id);
 					createRewards();
 				}
-			
-			
 			}	
 		}
 	});
@@ -434,7 +446,7 @@ function createRewards(){
 		}
 		
 		leveling = true;
-		if(!Player.list[i].didSnatch){
+		if(!Player.list[i].didSnatch && Player.list[i].bodyLevel < Player.list[i].body.maxLevel){
 			Player.list[i].bodyExperience += bodyExpReward;
 			while(leveling){
 				if(Player.list[i].bodyExperience >= Math.floor(XPBASE*(Math.pow(Player.list[i].bodyLevel, XPFACTOR)))){
@@ -452,6 +464,7 @@ function createRewards(){
 				}
 			}
 		}else{
+			Player.list[i].didSnatch = true; //A work around for not receiving xp after max level, rename didSnatch to something later...
 			console.log("Player snatched a body so he is not given any body xp from this battle!");
 		}
 		Player.list[i].gold += goldReward;
