@@ -2,6 +2,7 @@ var express = require('express');
 var app = express();
 var serv = require('http').Server(app);
 
+var Lobby = require('./Lobby.js');
 var Entity = require('./Entity.js');
 //THIS ORDER BELOW DEFINES WHICH CLASSES CAN REQUIRE WHICH CLASSES
 //IN THIS CURRENT ORDER
@@ -31,7 +32,6 @@ console.log("Server started");
 
 var io = require('socket.io') (serv,{});
 var playerTurn = true;
-var enemyTimer = 0;
 SOCKET_LIST = {};
 
 //On player connect
@@ -55,6 +55,47 @@ io.sockets.on('connection', function(socket){
 			success:true,
 			
 		});
+	});
+	
+	socket.on('lobbyJoin', function(data){
+		console.log("attempting to join lobby " + data.name);
+		for(var i in Lobby.list){
+			if(data.name == Lobby.list[i].name && data.password == Lobby.list[i].password){
+				console.log("Joining lobby succesful!");
+				Lobby.AddPlayer(Lobby.list[i].id, data.id);
+				Player.list[data.id].lobby = Lobby.list[i];
+				
+				for(var j in SOCKET_LIST){
+					Asocket = SOCKET_LIST[j];
+					Asocket.emit('lobbyJoin', {
+						id:data.id,
+						lobby:Lobby.list[i],
+						leader:false,
+					});
+				}
+				return;
+			}
+		}
+			
+	});
+	
+	//LOBBY CREATION STUFF
+	socket.on('createNewLobby', function(data){
+		var lobby = Lobby();
+		Lobby.AddPlayer(lobby.id, data.creatorId);
+		Player.list[data.creatorId].lobby = lobby;
+		Player.list[data.creatorId].partyLeader = true;
+		for(var i in SOCKET_LIST){
+			Asocket = SOCKET_LIST[i];
+			Asocket.emit('lobbyJoin', {
+				id:data.creatorId,
+				lobby:lobby,
+				leader:true,
+			});
+		}
+		console.log(Player.list[data.creatorId].id + " just joined " + lobby.id + "!!");
+		console.log("So players lobby is now " + Player.list[data.creatorId].lobby.name);
+		
 	});
 	
 	//On player "battle" -ready click
@@ -92,15 +133,20 @@ io.sockets.on('connection', function(socket){
 	
 	//Battle starting 
 	socket.on('startBattle', function(data){
-		console.log("startBattle received from: " + data.sender);
-		if(Player.list[data.sender].partyLeader && Player.ArePlayersGoReady()){
-			createBattle(data.difficulty);
+		//console.log("startBattle received from: " + data.sender);
+		if(Player.list[data.sender].partyLeader && Player.ArePlayersGoReadyLobby(data.sender)){
+		createBattle(data.difficulty, Player.list[data.sender].lobby.id);
 			for(var i in SOCKET_LIST){
 				Asocket = SOCKET_LIST[i];
-				Asocket.emit('battleTransition', {
-			});
-		}	
-		}
+				for(var i in Player.list[data.sender].lobby.players){
+					//console.log("Searching through players in lobby " + Player.list[data.sender].lobby.id+ " and sending them to battle!");
+					if(Player.list[data.sender].lobby.players[i] == Asocket.id){
+						Asocket.emit('battleTransition');
+						//console.log("Found such a player!");					
+						}
+					}
+				}	
+			}
 	});
 	
 	//Attack click in battle
@@ -135,9 +181,11 @@ io.sockets.on('connection', function(socket){
 		}		
 		
 		//After every attack, check if all enemies are dead 
-		if(Enemy.AreEnemiesDead()){
+		console.log("Checking if all enemies are deaD " + Lobby.AreEnemiesDead(Player.list[data.id].lobby.id));
+		console.log("checked lobby is  " + Player.list[data.id].lobby.id);
+		if(Lobby.AreEnemiesDead(Player.list[data.id].lobby.id)){
 			console.log("All enemies dead, display rewards");
-			createRewards();
+			createRewards(Player.list[data.id].lobby.id);
 		}
 	});
 	
@@ -153,7 +201,8 @@ io.sockets.on('connection', function(socket){
 			console.log("Player has a snatch target...");
 			if(Enemy.list[attacker.target].healthCurrent <= (Enemy.list[attacker.target].healthMax/3)){
 				console.log("Snatch target has less than 33% health!");
-				if(Enemy.GetEnemyAmount() == 1){
+				console.log("enemy count from " + Player.list[data.id].lobby.id);
+				if(Lobby.AliveEnemyCount(Player.list[data.id].lobby.id) == 1){
 					console.log("There is only one enemy remaining...");
 					console.log("SUCCESSFUL SNATCH");
 					Enemy.list[attacker.target].healthCurrent = 0;
@@ -169,7 +218,7 @@ io.sockets.on('connection', function(socket){
 						});
 					}
 					Player.ChangeBody(data.id);
-					createRewards();
+					createRewards(Player.list[data.id].lobby.id);
 				}
 			}	
 		}
@@ -198,18 +247,18 @@ io.sockets.on('connection', function(socket){
 			});
 		}
 		
-		for(var i in Player.list){
-			if(Player.list[i].ready){
-				
-			}
-			else
-				return;
-			
+		console.log("Checking if all players are ready?");
+		if(!Lobby.ArePlayersReady(data.lobby.id)){
+			console.log("All players are not ready in lobby " + data.lobby.id);
+			return;
 		}
 		
-		playerTurn = false;
+		
+			
+		
+		Lobby.list[data.lobby.id].playerTurn = false;
 		console.log("All players are ready, initiate enemy behavior!");
-		initiateEnemyBehavior();	
+		initiateEnemyBehavior(data.lobby.id);	
 	});
 	
 	//Selection in battle
@@ -342,79 +391,103 @@ setInterval(function(){
 	removePack.player = [];
 	removePack.enemy = [];
 	
-	if(!playerTurn){
-		enemyTimer++;
-		if(enemyTimer == 80 && !Enemy.AreEnemiesReady()){
-			console.log("New enemy round!");
-			initiateEnemyBehavior();
-		}
-		else if(enemyTimer == 80){
-			console.log("Player turn!");
-			for(var i in SOCKET_LIST){
-				var socket = SOCKET_LIST[i];
-				socket.emit('playerTurn');
+	for(var i in Lobby.list){
+		if(!Lobby.list[i].playerTurn){
+			Lobby.list[i].enemyTimer++;
+			if(Lobby.list[i].enemyTimer == 80 && !Lobby.AreEnemiesReady(Lobby.list[i].id)){
+				console.log("New enemy round!");
+				initiateEnemyBehavior(Lobby.list[i].id);
 			}
-			for(var i in Enemy.list){
-				Enemy.list[i].APCurrent = Enemy.list[i].APMax;
-			}
-			for(var i in Player.list){
-				Player.list[i].ready = false;		
-				Player.list[i].APCurrent = Player.list[i].APMax;
+			else if(Lobby.list[i].enemyTimer == 80){
+				console.log("Player turn!");
+				for(var j in SOCKET_LIST){
+					var socket = SOCKET_LIST[j];
+					for(var h in Lobby.list[i].players){
+						if(socket.id == Lobby.list[i].players[h])
+							socket.emit('playerTurn', {
+								lobbyId: Lobby.list[i].id,
+							});
+					}
+				}
+				//Set all enemies to have max ap
+				for(var j in Enemy.list){
+					console.log(Enemy.list[j].lobby.id + " that is enemy lobby id, current lobby is " + Lobby.list[i].id);
+					if(Enemy.list[j].lobby.id == Lobby.list[i].id)
+						Enemy.list[j].APCurrent = Enemy.list[j].APMax;
+				}
+				//Set all players to have max ap and be ready
+				for(var j in Player.list){
+					if(Player.list[j].lobby == Lobby.list[i]){
+						Player.list[j].ready = false;		
+						Player.list[j].APCurrent = Player.list[j].APMax;
+					}
+				}
 			}
 		}
 	}
 }, 1000/25);
 
-function initiateEnemyBehavior(){
-	enemyTimer = 0;
+function initiateEnemyBehavior(lobbyId){
+	Lobby.list[lobbyId].enemyTimer = 0;
 	var playerAmount = Player.getPlayerCount();
-	for(var i in Enemy.list){
+	console.log("Initiating enemy behaviour in lobby " + lobbyId);
+	for(var i in Lobby.list[lobbyId].enemies){
 		//console.log(Enemy.list[i].id + " is acting...");
-		if(Enemy.list[i].APCurrent >= 5){
-			Enemy.list[i].target = Player.getPlayerID(Math.floor(Math.random() * (playerAmount-0)+0));
-			console.log(Enemy.list[i].id +" target is now " + Enemy.list[i].target.id);
-			
-			var damage = Enemy.list[i].dieAmount * (Math.floor(Math.random()*(Enemy.list[i].dieSize-1)+1));
-			
-			Player.list[Enemy.list[i].target.id].healthCurrent -= damage;
-			Enemy.list[i].APCurrent -= 5;
-			
-			var eIdToSend = Enemy.list[i].id;
-			var tIdToSend = Enemy.list[i].target.id;
-			for(var i in SOCKET_LIST){
-				var socket = SOCKET_LIST[i];
-				socket.emit('enemyAttack', {
-					enemyID: eIdToSend,
-					targetID: tIdToSend,
+		//if(Enemy.list[i].lobby.id == lobbyId){
+			if(Enemy.list[i].APCurrent >= 5){
+				Enemy.list[i].target = Player.list[Lobby.GetRandomPlayer(lobbyId)];
 				
-				});
+				console.log(Enemy.list[i].id +" target is now " + Enemy.list[i].target.id);
+				
+				var damage = Enemy.list[i].dieAmount * (Math.floor(Math.random()*(Enemy.list[i].dieSize-1)+1));
+				
+				Player.list[Enemy.list[i].target.id].healthCurrent -= damage;
+				Enemy.list[i].APCurrent -= 5;
+				
+				var eIdToSend = Enemy.list[i].id;
+				var tIdToSend = Enemy.list[i].target.id;
+				for(var i in SOCKET_LIST){
+					var socket = SOCKET_LIST[i];
+					if(Player.list[socket.id].lobby.id == lobbyId){
+						socket.emit('enemyAttack', {
+							enemyID: eIdToSend,
+							targetID: tIdToSend,
+						});
+					}
+				}
 			}
+		//}
+	}
+}
+
+function createBattle(difficulty, lobbyId){
+	//Create enemies for battle
+	var enemyAmount = Math.floor(Math.random() * (3-1)+1);
+	for(var i = 0; i < enemyAmount; i++){
+		var enemy = Enemy.Create(difficulty, Lobby.list[lobbyId]);	
+		Lobby.AddEnemy(lobbyId, enemy.id);
+		
+	}
+	//Set all enemies readyGoBattle false
+	for(var i in Player.list){
+		if(Player.list[i].lobby != null && Player.list[i].lobby.id == lobbyId){
+			Player.list[i].readyGoBattle = false;
+			Player.list[i].APCurrent = Player.list[i].APMax;
 		}
 	}
 }
 
-function createBattle(difficulty){
-	//Create enemies for battle
-	var enemyAmount = Math.floor(Math.random() * (3-1)+1);
-	for(var i = 0; i < enemyAmount; i++){
-		var enemy = Enemy.Create(difficulty);	
-	}
-	//Set all enemies readyGoBattle false
-	for(var i in Player.list){
-		Player.list[i].readyGoBattle = false;
-		Player.list[i].APCurrent = Player.list[i].APMax;
-	}
-}
-
 //FUNCTION TO CREATE REWARDS AFTER A BATTLE
-function createRewards(){
+function createRewards(lobbyId){
 	var experienceReward=0;
 	var goldReward=0;
 	
 	//Create rewards for each enemy based on their stats
 	for(var i in Enemy.list){
-		experienceReward += Enemy.list[i].healthMax + Enemy.list[i].APMax + Enemy.list[i].dieSize*2 + Enemy.list[i].dieAmount*5;
-		goldReward += Enemy.list[i].healthMax/5 + Enemy.list[i].APMax/5 + Enemy.list[i].dieSize + Enemy.list[i].dieAmount*2;
+		if(Enemy.list[i].lobby.id == lobbyId){
+			experienceReward += Enemy.list[i].healthMax + Enemy.list[i].APMax + Enemy.list[i].dieSize*2 + Enemy.list[i].dieAmount*5;
+			goldReward += Enemy.list[i].healthMax/5 + Enemy.list[i].APMax/5 + Enemy.list[i].dieSize + Enemy.list[i].dieAmount*2;
+		}
 	}
 	//Floor rewards, wait 2000ms and send rewards to players
 	bodyExpReward = Math.floor(experienceReward);
@@ -425,71 +498,83 @@ function createRewards(){
 	
 	//Go through every player and check for level ups/bodylevel ups
 	for(var i in Player.list){
-		var leveling = true;
-		Player.list[i].experience += soulExpReward;
-		while(leveling){
-			if(Player.list[i].experience >= Math.floor(XPBASE*(Math.pow(Player.list[i].level, XPFACTOR)))){
-				Player.list[i].level++;
-				Player.list[i].soulPoints++;
-				SOCKET_LIST[Player.list[i].id].emit('levelUp', {
-					id:Player.list[i].id,
-					soul:true,
-					body:false,			
-				});
-				
-				console.log("Player leveled up!");
-				
-			}else{
-				leveling = false;
-				console.log("Player didnt level up!" + Player.list[i].experience +" / "+ Math.floor(XPBASE*(Math.pow(Player.list[i].level, XPFACTOR))));
-			}
-		}
-		
-		leveling = true;
-		if(!Player.list[i].didSnatch && Player.list[i].bodyLevel < Player.list[i].body.maxLevel){
-			Player.list[i].bodyExperience += bodyExpReward;
+		if(Player.list[i].lobby.id == lobbyId){
+			var leveling = true;
+			Player.list[i].experience += soulExpReward;
 			while(leveling){
-				if(Player.list[i].bodyExperience >= Math.floor(XPBASE*(Math.pow(Player.list[i].bodyLevel, XPFACTOR)))){
-					Player.list[i].bodyLevel++;
+				if(Player.list[i].experience >= Math.floor(XPBASE*(Math.pow(Player.list[i].level, XPFACTOR)))){
+					Player.list[i].level++;
+					Player.list[i].soulPoints++;
 					SOCKET_LIST[Player.list[i].id].emit('levelUp', {
 						id:Player.list[i].id,
-						soul:false,
-						body:true,			
+						soul:true,
+						body:false,			
 					});
-					Player.ChangeBody(Player.list[i].id);
-					console.log("Players body leveled up, body has level bonuses of " + Player.list[i].body.levelBonuses[0] +"/"+ Player.list[i].body.levelBonuses[1] +"/"+ Player.list[i].body.levelBonuses[2]+"/"+ Player.list[i].body.levelBonuses[3]);
+					
+					console.log("Player leveled up!");
+					
 				}else{
 					leveling = false;
-					console.log("Players body didnt level up!" + Player.list[i].bodyExperience +" / "+ Math.floor(XPBASE*(Math.pow(Player.list[i].bodyLevel, XPFACTOR))));
+					console.log("Player didnt level up!" + Player.list[i].experience +" / "+ Math.floor(XPBASE*(Math.pow(Player.list[i].level, XPFACTOR))));
 				}
 			}
-		}else{
-			Player.list[i].didSnatch = true; //A work around for not receiving xp after max level, rename didSnatch to something later...
-			console.log("Player snatched a body so he is not given any body xp from this battle!");
+			
+			leveling = true;
+			if(!Player.list[i].didSnatch && Player.list[i].bodyLevel < Player.list[i].body.maxLevel){
+				Player.list[i].bodyExperience += bodyExpReward;
+				while(leveling){
+					if(Player.list[i].bodyExperience >= Math.floor(XPBASE*(Math.pow(Player.list[i].bodyLevel, XPFACTOR)))){
+						Player.list[i].bodyLevel++;
+						SOCKET_LIST[Player.list[i].id].emit('levelUp', {
+							id:Player.list[i].id,
+							soul:false,
+							body:true,			
+						});
+						Player.ChangeBody(Player.list[i].id);
+						console.log("Players body leveled up, body has level bonuses of " + Player.list[i].body.levelBonuses[0] +"/"+ Player.list[i].body.levelBonuses[1] +"/"+ Player.list[i].body.levelBonuses[2]+"/"+ Player.list[i].body.levelBonuses[3]);
+					}else{
+						leveling = false;
+						console.log("Players body didnt level up!" + Player.list[i].bodyExperience +" / "+ Math.floor(XPBASE*(Math.pow(Player.list[i].bodyLevel, XPFACTOR))));
+					}
+				}
+			}else{
+				Player.list[i].didSnatch = true; //A work around for not receiving xp after max level, rename didSnatch to something later...
+				console.log("Player snatched a body so he is not given any body xp from this battle!");
+			}
+			Player.list[i].gold += goldReward;
 		}
-		Player.list[i].gold += goldReward;
-		
 	}
 	
 	setTimeout(function(){
 		for(var i in SOCKET_LIST){
-			var socket = SOCKET_LIST[i];
 			
+			var socket = SOCKET_LIST[i];
+			//console.log("Does " + Player.list[socket.id].lobby.id + " equal " + lobbyId + "?");
+			if(Player.list[socket.id].lobby.id == lobbyId){
 
-			socket.emit('showRewards', {
-				soulexp:soulExpReward,
-				bodyexp:bodyExpReward,
-				gold:goldReward,
-				didSnatch:Player.list[socket.id].didSnatch,
-			});
-			console.log(Player.list[socket.id].didSnatch + " did snatch");
-			if(Player.list[socket.id].didSnatch)
-				Player.list[i].didSnatch = false;
+				socket.emit('showRewards', {
+					soulexp:soulExpReward,
+					bodyexp:bodyExpReward,
+					gold:goldReward,
+					didSnatch:Player.list[socket.id].didSnatch,
+				});
+				console.log(Player.list[socket.id].didSnatch + " did snatch");
+				if(Player.list[socket.id].didSnatch)
+					Player.list[i].didSnatch = false;
+			}
+			
 		}
 		console.log("Rewards sent to players, ready to clear out enemies!");
 		
-		Enemy.ClearEnemyList();
-		Enemy.list = [];
+		//Enemy.ClearEnemyList(lobbyId);
+		
+		for(var i in Lobby.list[lobbyId].enemies){
+			delete Enemy.list[Lobby.list[lobbyId].enemies[i]];
+			console.log("Enemy " + Lobby.list[lobbyId].enemies[i] + " removed!");
+		}
+		
+		Lobby.list[lobbyId].enemies = [];
+		console.log("Lobby " + lobbyId + " enemies cleared!");
 		Enemy.ClearInitPack();
 		initPack.EnemyInitPack = [];
 	}, 2000);

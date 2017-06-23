@@ -3,6 +3,7 @@
 var Entity = function(param){
 	var self = {
 		id:"",
+		lobby:null,
 		body:null,
 		healthMax:0,
 		healthCurrent:0,
@@ -14,6 +15,8 @@ var Entity = function(param){
 	if(param){
 		if(param.id)
 			self.id = param.id;	
+		if(param.lobby)
+			self.lobby = param.lobby;
 		if(param.body)
 			self.body = param.body;
 		if(param.healthMax){

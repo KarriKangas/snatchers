@@ -3,6 +3,13 @@ var Drawer = function(){
 	
 	
 }
+	
+	//START (JOIN / HOST) Menu
+	var HostButton = PIXI.Sprite.fromImage('client/img/Menu/Start/HostButton.png');
+	var JoinButton = PIXI.Sprite.fromImage('client/img/Menu/Start/JoinButton.png');
+	
+	//START JOIN Menu
+	var JoinBackButton = PIXI.Sprite.fromImage('client/img/Menu/BackButton.png');
 		
 	//BATTLE
 	var Atkbutton = PIXI.Sprite.fromImage('client/img/Battle/AtkButton.png');
@@ -78,6 +85,7 @@ var Drawer = function(){
 	var chooseDifText = new PIXI.Text('',healthStyle);
 	var leaderChoosingText = new PIXI.Text('',healthStyle);
 	var rewardText = new PIXI.Text('',healthStyle);
+	var lobbyInfoText = new PIXI.Text('',menuStyle);
 		
 	//CHAR MENU TEXTS
 	var bodyText = new PIXI.Text('', menuStyle);
@@ -91,6 +99,25 @@ var Drawer = function(){
 	var ResetDamage = new PIXI.Text('', menuStyle);	
 	var ResetHealth = new PIXI.Text('', menuStyle);	
 	var ResetAP = new PIXI.Text('', menuStyle);	
+	
+	//START (HOST/JOIN) screen clicks
+	HostButton.on('pointerdown', () => {
+		socket.emit("createNewLobby", {
+			creatorId:selfId,
+		});
+		
+		Player.list[selfId].inMenu = true;
+	});
+	
+	JoinButton.on('pointerdown', () => {
+		for (var i = pixi.stage.children.length - 1; i >= 0; i--){	
+			pixi.stage.removeChild(pixi.stage.children[i]);		
+			console.log(i);
+		}
+		Player.list[selfId].inStart = false;
+		lobbyDiv.style.display = "inline-block";
+	});
+	
 	
 	//init plusminus list for reset
 	SetupPlusMinusList();
@@ -108,6 +135,7 @@ var Drawer = function(){
 			
 	CharBackButton.on('pointerdown', () => {
 		Drawer.initMenu();		
+		Player.list[selfId].inMenu = true;
 	});
 	
 	EasyButton.on('pointerdown', () => {
@@ -206,15 +234,16 @@ var Drawer = function(){
 	});
 	//BATTLE BUTTONS
 	Rdybutton.on('pointerdown', () => {
-		if(playerTurn){
+		if(Player.list[selfId].lobby.playerTurn){
 			socket.emit('rdy',{
-				id:selfId
+				id:selfId,
+				lobby:Player.list[selfId].lobby,
 			});			
 		}
 	});	
 	
 	Atkbutton.on('pointerdown', () => {
-		if(playerTurn && !Player.list[selfId].attacking){
+		if(Player.list[selfId].lobby.playerTurn && !Player.list[selfId].attacking){
 			socket.emit('atk',{
 				id:selfId
 			});
@@ -222,7 +251,7 @@ var Drawer = function(){
 	});
 	
 	Snatchbutton.on('pointerdown', () => {
-		if(playerTurn){
+		if(Player.list[selfId].lobby.playerTurn){
 			socket.emit('snatch',{
 				id:selfId
 			});
@@ -253,65 +282,119 @@ var Drawer = function(){
 			});			
 		}
 	});*/
+	
+		Drawer.initStart = function(){
+			for (var i = pixi.stage.children.length - 1; i >= 0; i--){	
+				pixi.stage.removeChild(pixi.stage.children[i]);		
+			}
+			
+			HostButton.interactive = true;
+			HostButton.buttonMode = true;
+			HostButton.anchor.set(0.5);
+			HostButton.x = 400;
+			HostButton.y = 200;
+			pixi.stage.addChild(HostButton);
+			
+			JoinButton.interactive = true;
+			JoinButton.buttonMode = true;
+			JoinButton.anchor.set(0.5);
+			JoinButton.x = 400;
+			JoinButton.y = 300;
+			pixi.stage.addChild(JoinButton);
+			
+			console.log("?");
+		}
+		
+		Drawer.drawStart = function(){
+			
+		}
+		
+		Drawer.initStartJoin = function(){
+			for (var i = pixi.stage.children.length - 1; i >= 0; i--){	
+				pixi.stage.removeChild(pixi.stage.children[i]);		
+			}
+			
+
+			/*LobbyNameInput.anchor.set(0.5);
+			LobbyNameInput.x = 400;
+			LobbyNameInput.y = 200;
+			pixi.stage.addChild(LobbyNameInput);
+			
+			LobbyPasswordInput
+			LobbyNameInput.anchor.set(0.5);
+			LobbyNameInput.x = 400;
+			LobbyNameInput.y = 200;
+			pixi.stage.addChild(LobbyNameInput);*/
+		}
+		
+	
 
 		Drawer.drawBattle = function(){
 		for(var i in Player.list){
-
-				if(!Player.list[i].attacking){
-					Player.list[i].Sprite.x = 100;
-					Player.list[i].Sprite.y = 50+100*Player.getPlayerListPosition(Player.list[i].id);
-					
-					pixi.stage.addChild(Player.list[i].Sprite);
-					
-					Player.list[i].healthText.x = 25;
-					Player.list[i].healthText.y = 25+100* Player.getPlayerListPosition(Player.list[i].id);
-					Player.list[i].healthText.fill = '#FFFFFF';
-					
-					pixi.stage.addChild(Player.list[i].Sprite);
-					pixi.stage.addChild(Player.list[i].healthText);
+				if(Player.list[i].lobby != null && Player.list[i].lobby.id == Player.list[selfId].lobby.id){
+					//console.log(Player.list[i].lobby + " PLAYERand " + Player.list[selfId].lobby);
+					if(!Player.list[i].attacking){
+						Player.list[i].Sprite.x = 100;
+						Player.list[i].Sprite.y = 50+100*Player.getPlayerListPosition(Player.list[i].id);
+						
+						pixi.stage.addChild(Player.list[i].Sprite);
+						
+						Player.list[i].healthText.x = 25;
+						Player.list[i].healthText.y = 25+100* Player.getPlayerListPosition(Player.list[i].id);
+						Player.list[i].healthText.fill = '#FFFFFF';
+						
+						pixi.stage.addChild(Player.list[i].Sprite);
+						pixi.stage.addChild(Player.list[i].healthText);
+					}
 				}
 			}
 
 			for(var i in Enemy.list){
 				//console.log(counter);
-				if(!Enemy.list[i].attacking){
-					Enemy.list[i].Sprite.x = 700;
-					Enemy.list[i].Sprite.y = 50+100*Enemy.getEnemyListPosition(Enemy.list[i].id);
+				//console.log(Enemy.list[i].lobby + " AND " + Player.list[selfId].lobby);
+				if(Enemy.list[i].lobby.id == Player.list[selfId].lobby.id){
+					//console.log(Enemy.list[i].lobby + " ENEMYand " + Player.list[selfId].lobby);
+					if(!Enemy.list[i].attacking){
+						Enemy.list[i].Sprite.x = 700;
+						Enemy.list[i].Sprite.y = 50+100*Enemy.getEnemyListPosition(Enemy.list[i].id);
+						
+						pixi.stage.addChild(Enemy.list[i].Sprite);
 					
-					pixi.stage.addChild(Enemy.list[i].Sprite);
-				
-				
-				
-				
-					Enemy.list[i].healthText.x = 650;
-					Enemy.list[i].healthText.y = 50+100*Enemy.getEnemyListPosition(Enemy.list[i].id);
-					Enemy.list[i].healthText.fill = '#FFFFFF';
 					
-					pixi.stage.addChild(Enemy.list[i].Sprite);
-					pixi.stage.addChild(Enemy.list[i].healthText);
-				
+					
+					
+						Enemy.list[i].healthText.x = 650;
+						Enemy.list[i].healthText.y = 50+100*Enemy.getEnemyListPosition(Enemy.list[i].id);
+						Enemy.list[i].healthText.fill = '#FFFFFF';
+						
+						pixi.stage.addChild(Enemy.list[i].Sprite);
+						pixi.stage.addChild(Enemy.list[i].healthText);
+					
+					}
 				}
 			}
 			
 		
 			for(var i in Player.list){
 				if(Player.list[i].attacking){
+					if(Player.list[i].lobby != null && Player.list[i].lobby.id == Player.list[selfId].lobby.id){
 				//console.log("animating player " + Player.list[i].attackFrame);
-					if(Player.list[i].attackFrame < 30){
-						Player.onPlayerInfoChange(Player.list[i].id);
-						Player.list[i].Sprite.x += 15;
-						Player.list[i].Sprite.y -= (Player.list[i].Sprite.y - Enemy.list[Player.list[i].target].Sprite.y)/30
-						Player.list[i].attackFrame++;
-					}
-					else if(Player.list[i].attackFrame >= 30 && Player.list[i].attackFrame < 60){
-						Player.list[i].Sprite.x -= 15;
-						Player.list[i].Sprite.y += (Player.list[i].Sprite.y - Enemy.list[Player.list[i].target].Sprite.y)/30
-						Player.list[i].attackFrame++;
-						Enemy.onEnemyInfoChange(Player.list[i].target);
-					}
-					else if(Player.list[i].attackFrame >= 60) {
-					Player.list[i].attacking = false;
-					Player.list[i].attackFrame = 0;					
+						if(Player.list[i].attackFrame < 30){
+							Player.onPlayerInfoChange(Player.list[i].id);
+							Player.list[i].Sprite.x += 15;
+							Player.list[i].Sprite.y -= (Player.list[i].Sprite.y - Enemy.list[Player.list[i].target].Sprite.y)/30
+							Player.list[i].attackFrame++;
+						}
+						else if(Player.list[i].attackFrame >= 30 && Player.list[i].attackFrame < 60){
+							Player.list[i].Sprite.x -= 15;
+							Player.list[i].Sprite.y += (Player.list[i].Sprite.y - Enemy.list[Player.list[i].target].Sprite.y)/30
+							Player.list[i].attackFrame++;
+							Enemy.onEnemyInfoChange(Player.list[i].target);
+						}
+						else if(Player.list[i].attackFrame >= 60) {
+						Player.list[i].attacking = false;
+						Player.list[i].attackFrame = 0;					
+						}
 					}
 				}			
 			}
@@ -319,39 +402,42 @@ var Drawer = function(){
 			enemyTimer++;
 			//ENEMY ACTIONS HERE
 			for(var i in Enemy.list){
-			
-				if(Enemy.list[i].attacking){
-					if(Enemy.list[i].currentWait > 0)
-						Enemy.list[i].currentWait--;
-				
-					if(Enemy.list[i].currentWait <= 0){
-					//console.log("animating enemy " + Enemy.list[i].attackFrame);
-					//ASK SERVER FOR ANIMATION
-						if(Enemy.list[i].attackFrame < 30){
-							Enemy.list[i].Sprite.x -= 15;
-							Enemy.list[i].Sprite.y -= (Enemy.list[i].Sprite.y - Player.list[Enemy.list[i].target].Sprite.y)/30
-							Enemy.list[i].attackFrame++;
-						}
-					//ASK SERVER FOR UPDATED HEALTH NUMBERS + DAMAGE
-						else if(Enemy.list[i].attackFrame >= 30 && Enemy.list[i].attackFrame < 60){
-							Enemy.list[i].Sprite.x += 15;
-							Enemy.list[i].Sprite.y += (Enemy.list[i].Sprite.y - Player.list[Enemy.list[i].target].Sprite.y)/30
-							Enemy.list[i].attackFrame++;
-							Player.onPlayerInfoChange(Enemy.list[i].target);
-						}
-						else if(Enemy.list[i].attackFrame >= 60) {
-								Enemy.list[i].currentWait = Enemy.list[i].waitTime;
-								Enemy.list[i].attacking = false;
-								Enemy.list[i].attackFrame = 0;	
-								Enemy.onEnemyInfoChange(Enemy.list[i].id);
-							}						
-						}
-					}	
+				if(Enemy.list[i].lobby.id == Player.list[selfId].lobby.id){
+					if(Enemy.list[i].attacking){
+						if(Enemy.list[i].currentWait > 0)
+							Enemy.list[i].currentWait--;
+					
+						if(Enemy.list[i].currentWait <= 0){
+						//console.log("animating enemy " + Enemy.list[i].attackFrame);
+						//ASK SERVER FOR ANIMATION
+							if(Enemy.list[i].attackFrame < 30){
+								Enemy.list[i].Sprite.x -= 15;
+								Enemy.list[i].Sprite.y -= (Enemy.list[i].Sprite.y - Player.list[Enemy.list[i].target].Sprite.y)/30
+								Enemy.list[i].attackFrame++;
+							}
+						//ASK SERVER FOR UPDATED HEALTH NUMBERS + DAMAGE
+							else if(Enemy.list[i].attackFrame >= 30 && Enemy.list[i].attackFrame < 60){
+								Enemy.list[i].Sprite.x += 15;
+								Enemy.list[i].Sprite.y += (Enemy.list[i].Sprite.y - Player.list[Enemy.list[i].target].Sprite.y)/30
+								Enemy.list[i].attackFrame++;
+								Player.onPlayerInfoChange(Enemy.list[i].target);
+							}
+							else if(Enemy.list[i].attackFrame >= 60) {
+									Enemy.list[i].currentWait = Enemy.list[i].waitTime;
+									Enemy.list[i].attacking = false;
+									Enemy.list[i].attackFrame = 0;	
+									Enemy.onEnemyInfoChange(Enemy.list[i].id);
+								}						
+							}
+						}	
+					}
 				}
 		}
 		
 		Drawer.initMenu = function(){
 			Player.list[selfId].inMenuChar = false;
+			Player.list[selfId].inStart = false;
+			
 			for (var i = pixi.stage.children.length - 1; i >= 0; i--){	
 				pixi.stage.removeChild(pixi.stage.children[i]);		
 			}
@@ -365,7 +451,8 @@ var Drawer = function(){
 			leftBar.y = 0;
 			pixi.stage.addChild(leftBar);
 			
-			goBattleText.text = ('Players ready to battle: (' + Player.getGoReadyCount() + "/" + Player.getPlayerCount() + ")");
+			if(Player.list[selfId].lobby != null)
+				goBattleText.text = ('Players ready to battle: (' + Player.getGoReadyCount(Player.list[selfId].lobby.id) + "/" + Player.getPlayerCount(Player.list[selfId].lobby.id) + ")");
 			goBattleText.x = 5;
 			goBattleText.y = 500;
 			pixi.stage.addChild(goBattleText);
@@ -389,6 +476,13 @@ var Drawer = function(){
 			chooseDifText.x = 375;
 			chooseDifText.y = 50;
 			pixi.stage.addChild(chooseDifText);
+			
+			if(Player.list[selfId].lobby != null)
+				lobbyInfoText.text = ("Current lobby name: " + Player.list[selfId].lobby.name + " password: " + Player.list[selfId].lobby.password);
+			lobbyInfoText.x = 325;
+			lobbyInfoText.y = 5;
+			pixi.stage.addChild(lobbyInfoText);
+			
 			
 			var menuUIButtons = [
 				CharacterButton,
@@ -440,8 +534,8 @@ var Drawer = function(){
 			else{
 				partyLeaderText.text = ('Party leader is: P' + (Player.getPartyLeaderId().toString()).substring(2,5));
 			}
-				
-			goBattleText.text = ('Players ready to battle: (' + Player.getGoReadyCount() + "/" + Player.getPlayerCount() + ")");
+		
+			goBattleText.text = ('Players ready to battle: (' + Player.getGoReadyCount(Player.list[selfId].lobby.id) + "/" + Player.getPlayerCount(Player.list[selfId].lobby.id) + ")");
 		
 		}
 		
@@ -505,9 +599,7 @@ var Drawer = function(){
 		CharImage.y = 100;
 		pixi.stage.addChild(CharImage);
 		
-		console.log("for Player " + selfId + " ----- " +Player.list[selfId].bodyLevel + " is bodylevel " + Player.list[selfId].bodyExperience + " is bodyexp" );
 		var bodyXP = ""
-		console.log(Player.list[selfId].bodyLevel + " AND " + Player.list[selfId].body.maxLevel);
 		if(Player.list[selfId].bodyLevel < Player.list[selfId].body.maxLevel)
 			bodyXP = "\nBody experience: " + Player.list[selfId].bodyExperience + "/" + Math.floor(50*(Math.pow(Player.list[selfId].bodyLevel, 2.5)));
 		else

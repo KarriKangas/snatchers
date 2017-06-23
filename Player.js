@@ -32,6 +32,7 @@ var Player = function(param){
 	self.getInitPack = function(){
 		return {
 			id:self.id,
+			lobby:self.lobby,
 			body:self.body,
 			healthMax:self.body.healthMax + (self.bodyLevel*self.body.levelBonuses[0]),
 			healthCurrent:self.body.healthMax,
@@ -69,8 +70,6 @@ var Player = function(param){
 
 	Player.list[self.id] = self;
 	Player.ChangeBody(self.id);
-	if(Player.getPlayerCount() == 1)
-		self.partyLeader = true;
 	
 	Player.initPack.push(self.getInitPack());
 	return self;
@@ -131,7 +130,6 @@ Player.onDisconnect = function(socket){
 }
 
 Player.ChangeBody = function(id){
-	console.log("BEFORE " + Player.list[id].healthMax +" / "+ Player.list[id].dieSize +" / "+ Player.list[id].dieAmount +" / "+ Player.list[id].APMax);
 	var body = Player.list[id].body;
 
 	Player.list[id].healthMax = body.healthMax + (Player.list[id].bodyLevel*body.levelBonuses[0]);
@@ -139,9 +137,6 @@ Player.ChangeBody = function(id){
 	Player.list[id].dieSize = body.dieSize + (Player.list[id].bodyLevel*body.levelBonuses[2]);
 	Player.list[id].dieAmount = body.dieAmount + (Player.list[id].bodyLevel*body.levelBonuses[3]);
 	Player.list[id].APMax = body.APMax + (Player.list[id].bodyLevel*body.levelBonuses[1]);
-
-	console.log("AFTER " + Player.list[id].healthMax +" / "+ Player.list[id].dieSize +" / "+ Player.list[id].dieAmount +" / "+ Player.list[id].APMax);
-	console.log("So, now player " + id + " should have " + Player.list[id].healthMax + " health");
 }
 
 Player.update = function(socket){
@@ -155,8 +150,17 @@ Player.update = function(socket){
 
 Player.getPlayerCount = function(){
 	var x = 0;
-	for(var player in Player.list){
-		x = x + 1;		
+	for(var i in Player.list){
+			x = x + 1;		
+	}
+	return x;
+}
+
+Player.getPlayerCountInLobby = function(lobbyId){
+	var x = 0;
+	for(var i in Player.list){
+		if(Player.list[i].lobby.id == lobbyId)
+			x = x + 1;		
 	}
 	return x;
 }
@@ -176,6 +180,15 @@ Player.ArePlayersGoReady = function(){
 			return false;		
 	}
 	return true;
+}
+
+Player.ArePlayersGoReadyLobby = function(lobbyId){
+	for(var i in Player.list){
+		if(!Player.list[i].readyGoBattle && Player.list[i].lobbyId == lobbyId)
+			return false;		
+	}
+	return true;
+	
 }
 
 Player.ClearInitPack = function(){

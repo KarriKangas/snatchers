@@ -1,7 +1,7 @@
 var Enemy = function(initPack){
 	self = {};
 	self.id = initPack.id;
-	
+	self.lobby = initPack.lobby;
 	self.dieSize = initPack.dieSize;
 	self.dieAmount = initPack.dieAmount;
 	self.healthCurrent = initPack.healthCurrent;
@@ -38,7 +38,7 @@ var Enemy = function(initPack){
 			
 			
 	Enemy.list[self.id] = self;
-
+	console.log("AN ENEMY WAS CREATED WITH LOBBY " + self.lobby);
 	Enemy.onEnemyInfoChange(self.id);
 	return self;
 		
@@ -51,7 +51,9 @@ Enemy.getEnemyListPosition = function(id){
 	for(var i in Enemy.list){	
 		if(Enemy.list[i].id == id)
 			return counter;
-		counter++;
+		if(Enemy.list[i].lobby.id == Enemy.list[id].lobby.id)
+			counter++;
+		
 	}
 }
 		

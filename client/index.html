@@ -4,21 +4,34 @@
 		<meta charset="utf-8">
 		<title>Snatchers</title>
 	</head>
-	<body style="margin-left:25%; margin-top:5%; background-image: url('http://wallpapercave.com/wp/2oOGOxL.jpg')">
+	<body style="margin: auto;
+    width: 800px;
+	height: 600px;
+    border: 3px solid grey;
+    padding: 10px;
+	;background-image: url('http://wallpapercave.com/wp/2oOGOxL.jpg')">
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/4.5.2/pixi.min.js"></script>
 	<script src="/socket.io/socket.io.js"></script>
 	<script src="client/scripts/ClientPlayer.js"></script>
 	<script src="client/scripts/ClientEnemy.js"></script>
 	<script src="client/scripts/Drawer.js"></script>
 	
-	<div id="signDiv" style="margin:20%; display:inline-block">
-		Username: <input id="signDiv-username" type="text"></input><br>
-		Password: <input id="signDiv-password" type="password"  style="margin-top:5px; margin-left:4px;"></input><br>
-		<button id="signDiv-signIn" style="margin-left:50px; margin-top:5px;">Sign in</button>
-		<button id="signDiv-signUp" style="margin-left:50px; margin-top:5px;">Sign up</button>
+	<body>
+	<div id="signDiv" style="padding: 3px; margin-left:305px; margin-top:200px; width: 175px; font-family:'Trebuchet MS'";>
+		Username: <input id="signDiv-username" type="text" style="margin-bottom:5px;"></input><br>
+		Password: <input id="signDiv-password" type="password"></input><br>
+		<button id="signDiv-signIn" style="margin-left:52px; margin-top:5px;font-family:'Trebuchet MS'">Sign in</button>
+		<button id="signDiv-signUp" style="margin-left:50px; margin-top:5px;font-family:'Trebuchet MS'">Sign up</button>
 	</div>
 	
-	<body>
+	<div id="lobbyDiv" style="padding: 3px; margin-left:305px; margin-top:225px; width: 175px; display:none; position:absolute; background-color:grey;font-family:'Trebuchet MS' ">
+		Lobby Name: <input id="lobbyDiv-name" type="text"></input><br>
+		Password: <input id="lobbyDiv-password" type="text"></input><br>
+		<button id="lobbyDiv-join" style="margin-left:65px; margin-top:5px;font-family:'Trebuchet MS'">Join</button>
+	</div>
+	
+
+	
 	
 	</body>
 	
@@ -26,7 +39,6 @@
 		var socket = io();
 		var pixi = new PIXI.Application();
 		//document.body.appendChild(pixi.view);
-		
 		//SIGN IN
 		var signDiv = document.getElementById('signDiv');
 		var signDivUsername = document.getElementById('signDiv-username');
@@ -34,10 +46,23 @@
 		var signDivSignUp = document.getElementById('signDiv-signUp');
 		var signDivPassword = document.getElementById('signDiv-password');
 		
+		var lobbyDiv = document.getElementById('lobbyDiv');
+		var lobbyDivName = document.getElementById('lobbyDiv-name');
+		var lobbyDivPassword = document.getElementById('lobbyDiv-password');
+		var lobbyDivJoin = document.getElementById('lobbyDiv-join');
+		
 		signDivSignIn.onclick = function(){
 			socket.emit('signIn', {
 				username:signDivUsername.value,
 				password:signDivPassword.value,
+			});
+		}
+		
+		lobbyDivJoin.onclick = function(){
+			socket.emit('lobbyJoin', {
+				name:lobbyDivName.value,
+				password:lobbyDivPassword.value,
+				id:selfId,
 			});
 		}
 		
@@ -50,22 +75,37 @@
 		
 		});
 		
+		socket.on('lobbyJoin', function(data){
+			lobbyDiv.style.display = "none";
+			console.log("Player " + data.id + " joined " + data.lobby.id);
+			Player.list[data.id].lobby = data.lobby;
+			Player.list[data.id].partyLeader = data.leader;
+			Drawer.initMenu();	
+		});
+		
 		
 		var playerAmount = 0;
 		var playerTurn = true;
 		var battleInited = false;
 		var menuInited = false;
+		var startInited = false;
 		var enemyTimer = 0;
-		
+		console.log("I am player " + selfId + " and also " + Player.list[selfId]);
 		pixi.ticker.add(()=>
 		{
-			if(Player.getPlayerCount() > 0 && Player.list[selfId].inMenu){
+			if(Player.list[selfId] && Player.list[selfId].inStart){
+				if(!startInited)
+					Drawer.initStart();
+				Drawer.drawStart();
+			}
+			
+			if(Player.list[selfId] && Player.list[selfId].lobby != null && Player.list[selfId].inMenu){
 				if(!menuInited)
 					Drawer.initMenu();
 				Drawer.drawMenu();
 			}
 			
-			if(Player.getPlayerCount() > 0 && Player.list[selfId].inBattle){
+			if(Player.list[selfId] && Player.list[selfId].lobby != null && Player.list[selfId].inBattle){
 				if(!battleInited)
 					Drawer.initBattle();
 				if(!Player.list[selfId].inRewards)
@@ -83,7 +123,7 @@
 			
 			socket.on('confirmGoBattle', function(data){
 				Player.list[data.id].readyToBattle = true;
-				goBattleText.text = ('Players ready to battle: (' + Player.getGoReadyCount() + "/" + Player.getPlayerCount() + ")");
+				goBattleText.text = ('Players ready to battle: (' + Player.getGoReadyCount(Player.list[data.id].lobby.id) + "/" + Player.getPlayerCount(Player.list[data.id].lobby.id) + ")");
 			});
 				
 			socket.on('battleTransition', function(data){
@@ -147,8 +187,10 @@
 			});
 			
 			socket.on('enemyAttack', function(data){
-				playerTurn = false;
-				turnText.text = "Turn: Enemies";
+				Enemy.list[data.enemyID].lobby.id.playerTurn = false;
+				if(Player.list[selfId].lobby != null && Player.list[selfId].lobby.id == Enemy.list[data.enemyID].lobby.id)
+					turnText.text = "Turn: Enemies";
+					
 				for(var i in Enemy.list){
 					Enemy.list[data.enemyID].attacking = true;
 					Enemy.list[data.enemyID].target = data.targetID;
@@ -156,9 +198,9 @@
 				enemyTimer = 0;
 			});
 			
-			socket.on('playerTurn', function(){
+			socket.on('playerTurn', function(data){
 				console.log("Player turn...");
-				playerTurn = true;
+				Player.list[selfId].lobby.playerTurn = true;
 				turnText.text = "Turn: Players";
 				for(var i in Player.list){
 					Player.list[i].APCurrent = Player.list[i].APMax;

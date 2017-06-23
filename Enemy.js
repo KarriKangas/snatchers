@@ -12,6 +12,7 @@ var Enemy = function(param){
 		return {
 			id:self.id,
 			body:self.body,
+			lobby:self.lobby,
 			healthMax:self.healthMax,
 			healthCurrent:self.healthCurrent,
 			APMax:self.APMax,
@@ -41,17 +42,18 @@ var Enemy = function(param){
 
 Enemy.list = {};
 
-Enemy.Create = function(difficulty){
+Enemy.Create = function(difficulty, lobby){
 	var body = Body.getBody(difficulty)
 	var enemy = Enemy({
 		id:Math.random()+5,
+		lobby:lobby,
 		body:body,
 		healthMax:body.healthMax,
 		dieSize:body.dieSize,
 		dieAmount:body.dieAmount,
 		APMax:body.APMax,
 	});
-		
+	
 	console.log("Enemy created..." + enemy.body.name);
 	return enemy;
 }
@@ -91,14 +93,6 @@ Enemy.AreEnemiesReady = function(){
 	return true;
 }
 
-Enemy.AreEnemiesDead = function(){
-	for(var i in Enemy.list){
-		if(!Enemy.list[i].toDie)
-			return false;
-	}
-	return true;
-}
-
 Enemy.GetEnemyAmount = function(){
 	var amount = 0;
 	for(var i in Enemy.list){
@@ -109,9 +103,13 @@ Enemy.GetEnemyAmount = function(){
 	return amount;
 }
 
-Enemy.ClearEnemyList = function(){
-	Enemy.list = [];
-}
+//DEPRECATED
+/*Enemy.ClearEnemyList = function(lobbyId){
+	for(var i in Lobby.list[lobbyId].enemies){
+		delete Enemy.list[Lobby.list[lobbyId].enemies[i]];
+		console.log("Enemy " + Lobby.list[lobbyId].enemies[i] + " removed!");
+	}
+}*/
 
 Enemy.ClearInitPack = function(){
 	Enemy.initPack = [];

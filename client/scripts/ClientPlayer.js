@@ -1,7 +1,7 @@
 	var Player = function(initPack){
 		self = {};
 		self.id = initPack.id;
-	
+		self.lobby = initPack.lobby;
 		self.dieSize = initPack.dieSize;
 		self.dieAmount = initPack.dieAmount;		
 		self.healthMax = initPack.healthMax;
@@ -28,10 +28,14 @@
 		self.ready = false;
 		self.attackFrame = 0;
 		
+		self.loaded = false;
 		self.inBattle = false;
-		self.inMenu = true;
+		self.inMenu = false;
 		self.inRewards = false;
 		self.inMenuChar = false;
+		self.inStart = true;
+		
+		console.log("hello");
 		
 		self.Sprite = PIXI.Sprite.fromImage('client/img/Battle/' + self.body.name +'.png');
 		self.healthText = new PIXI.Text('', healthStyle);
@@ -53,6 +57,8 @@
 		playerAmount = Player.getPlayerCount();
 		console.log("A new Player has joined");	
 		Player.onPlayerInfoChange(self.id);
+		
+		self.loaded = true;
 		return self;
 	}
 	
@@ -60,13 +66,15 @@
 	
 	
 	//PLAYER. FUNCTIONS DOWN HERE
-	Player.getGoReadyCount = function(){
+	Player.getGoReadyCount = function(lobbyid){
 		var counter = 0;
+		console.log(selfId + " in " + lobbyid + " wants to know player count... ");
 		for(var i in Player.list){
-			if(Player.list[i].readyToBattle){
+			if(Player.list[i].lobby != null && Player.list[i].lobby.id == lobbyid && Player.list[i].readyToBattle){
 				counter++;			
-				}
+			}
 		}
+		console.log("and it is... " + counter);
 		return counter;
 	}
 	
@@ -82,14 +90,16 @@
 		for(var i in Player.list){
 			if(Player.list[i].id == id)
 				return counter;
-			counter++;
+			if(Player.list[i].lobby.id == Player.list[id].lobby.id)
+				counter++;
 		}
 	}
 		
-	Player.getPlayerCount = function(){
+	Player.getPlayerCount = function(lobbyid){
 		var x = 0;
-		for(var player in Player.list){
-			x = x + 1;		
+		for(var i in Player.list){
+			if(Player.list[i].lobby != null && Player.list[i].lobby.id == lobbyid)
+				x = x + 1;		
 		}
 		return x;
 	}
