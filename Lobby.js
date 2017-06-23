@@ -51,6 +51,16 @@ Lobby.PlayerCount = function(lobbyId){
 	return amount;
 }
 
+Lobby.ArePlayersGoReady = function(lobbyId){
+	console.log("Checking if players are ready in " + lobbyId);
+	for(var i in Lobby.list[lobbyId].players){
+		if(!Player.list[Lobby.list[lobbyId].players[i]].readyGoBattle)
+			return false;
+	}
+	return true;
+	
+}
+
 Lobby.EnemyCount = function(lobbyId){
 	var amount = 0;
 	//console.log("counting amount from " + lobbyId);

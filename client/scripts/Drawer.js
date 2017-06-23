@@ -301,8 +301,7 @@ var Drawer = function(){
 			JoinButton.x = 400;
 			JoinButton.y = 300;
 			pixi.stage.addChild(JoinButton);
-			
-			console.log("?");
+
 		}
 		
 		Drawer.drawStart = function(){

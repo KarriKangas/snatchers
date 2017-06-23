@@ -35,7 +35,7 @@ var Enemy = function(param){
 		};
 	}
 	Enemy.list[self.id] = self;
-	console.log("Created Enemy id:" + self.id + "\nhealthMax: " + self.healthMax + "\nAPMax: " + self.APMax+ "\ndieSize: " + self.dieSize+ "\ndieAmount: " + self.dieAmount);	
+	//console.log("Created Enemy id:" + self.id + "\nhealthMax: " + self.healthMax + "\nAPMax: " + self.APMax+ "\ndieSize: " + self.dieSize+ "\ndieAmount: " + self.dieAmount);	
 	Enemy.initPack.push(self.getInitPack());
 	return self;
 }
@@ -54,7 +54,7 @@ Enemy.Create = function(difficulty, lobby){
 		APMax:body.APMax,
 	});
 	
-	console.log("Enemy created..." + enemy.body.name);
+	//console.log("Enemy created..." + enemy.body.name);
 	return enemy;
 }
 

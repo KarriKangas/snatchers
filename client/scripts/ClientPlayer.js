@@ -35,8 +35,6 @@
 		self.inMenuChar = false;
 		self.inStart = true;
 		
-		console.log("hello");
-		
 		self.Sprite = PIXI.Sprite.fromImage('client/img/Battle/' + self.body.name +'.png');
 		self.healthText = new PIXI.Text('', healthStyle);
 		
@@ -68,13 +66,13 @@
 	//PLAYER. FUNCTIONS DOWN HERE
 	Player.getGoReadyCount = function(lobbyid){
 		var counter = 0;
-		console.log(selfId + " in " + lobbyid + " wants to know player count... ");
+		//console.log(selfId + " in " + lobbyid + " wants to know player count... ");
 		for(var i in Player.list){
 			if(Player.list[i].lobby != null && Player.list[i].lobby.id == lobbyid && Player.list[i].readyToBattle){
 				counter++;			
 			}
 		}
-		console.log("and it is... " + counter);
+		//console.log("and it is... " + counter);
 		return counter;
 	}
 	

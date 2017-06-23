@@ -81,6 +81,16 @@
 			Player.list[data.id].lobby = data.lobby;
 			Player.list[data.id].partyLeader = data.leader;
 			Drawer.initMenu();	
+			Player.list[selfId].inMenu = true;
+		});
+		
+		socket.on('addLobbyPlayer', function(data){
+			console.log("I AM PLAYER " + selfId);
+			console.log("ADDING A NEW PLAYER TO CONNECTED PLAYERS LOBBY");
+			console.log(data.player + " and " + data.player.id);
+			if(data.player.id != selfId)
+				new Player(data.player);	
+			
 		});
 		
 		
@@ -243,12 +253,14 @@
 		socket.on('init',function(data){	
 			if(data.selfId)
 				selfId = data.selfId;
-			
+				
 			for(var i = 0; i < data.PlayerInitPack.length; i++)
 				new Player(data.PlayerInitPack[i]);
 				
+				
 			for(var i = 0; i < data.EnemyInitPack.length; i++)
 				new Enemy(data.EnemyInitPack[i]);
+				
 			
 		});
 		

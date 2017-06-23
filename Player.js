@@ -125,6 +125,9 @@ Player.onDisconnect = function(socket){
 			n++;
 		}
 	}
+	//Delete player from Lobby (if player has a lobby) as well as global Player.list
+	if(Player.list[socket.id].lobby != null)
+		delete Player.list[socket.id].lobby.players[socket.id];	
 	delete Player.list[socket.id];
 	Player.removePack.push(socket.id);
 }

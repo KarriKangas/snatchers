@@ -65,14 +65,27 @@ io.sockets.on('connection', function(socket){
 				Lobby.AddPlayer(Lobby.list[i].id, data.id);
 				Player.list[data.id].lobby = Lobby.list[i];
 				
+				//THIS IS TO TELL EVERY PLAYER ALREADY IN THE LOBBY THAT A NEW PLAYER HAS JOINED!
 				for(var j in SOCKET_LIST){
 					Asocket = SOCKET_LIST[j];
-					Asocket.emit('lobbyJoin', {
-						id:data.id,
-						lobby:Lobby.list[i],
-						leader:false,
-					});
+					if(Player.list[j].lobby != null && Player.list[j].lobby.id == Lobby.list[i].id){
+						Asocket.emit('lobbyJoin', {
+							id:data.id,
+							lobby:Lobby.list[i],
+							leader:false,
+						});
+					}
+					
 				}
+				
+				//THIS IS TO TELL THE NEW PLAYER ABOUT EVERY PLAYER IN THE LOBBY!
+				
+				for(var i in Lobby.list[i].players){
+					SOCKET_LIST[data.id].emit('addLobbyPlayer',{
+						player:Player.list[i],
+					});
+				}	
+				
 				return;
 			}
 		}
@@ -85,13 +98,15 @@ io.sockets.on('connection', function(socket){
 		Lobby.AddPlayer(lobby.id, data.creatorId);
 		Player.list[data.creatorId].lobby = lobby;
 		Player.list[data.creatorId].partyLeader = true;
-		for(var i in SOCKET_LIST){
+		for(var i in SOCKET_LIST){	
 			Asocket = SOCKET_LIST[i];
-			Asocket.emit('lobbyJoin', {
-				id:data.creatorId,
-				lobby:lobby,
-				leader:true,
-			});
+			if(Player.list[i].lobby != null && Player.list[i].lobby.id == lobby.id){
+				Asocket.emit('lobbyJoin', {
+					id:data.creatorId,
+					lobby:lobby,
+					leader:true,
+				});
+			}
 		}
 		console.log(Player.list[data.creatorId].id + " just joined " + lobby.id + "!!");
 		console.log("So players lobby is now " + Player.list[data.creatorId].lobby.name);
@@ -114,11 +129,11 @@ io.sockets.on('connection', function(socket){
 			console.log(Player.list[data.id].id + " is now ready for battle!");
 		}
 		
-		for(var i in Player.list){
-			if(!Player.list[i].readyGoBattle){
-				console.log("All players are not ready");
-				return;
-			}
+		console.log("ARE PLAYERS READY?!");
+		if(!Lobby.ArePlayersGoReady([Player.list[data.id].lobby.id])){
+			console.log("ALL PLAYERS ARE NOT READY!");
+			return;
+			
 		}
 		
 		console.log("All players ARE ready!");
@@ -134,6 +149,11 @@ io.sockets.on('connection', function(socket){
 	//Battle starting 
 	socket.on('startBattle', function(data){
 		//console.log("startBattle received from: " + data.sender);
+		if(!Lobby.ArePlayersGoReady([Player.list[data.sender].lobby.id])){
+			console.log("ALL PLAYERS ARE NOT READY!");
+			return;
+		}
+		console.log("ALL PLAYERS ARE READY, lets battle!");
 		if(Player.list[data.sender].partyLeader && Player.ArePlayersGoReadyLobby(data.sender)){
 		createBattle(data.difficulty, Player.list[data.sender].lobby.id);
 			for(var i in SOCKET_LIST){
