@@ -6,7 +6,7 @@
 		self.dieAmount = initPack.dieAmount;		
 		self.healthMax = initPack.healthMax;
 		self.healthCurrent = initPack.healthMax;
-		self.APCurrent = initPack.APCurrent;
+		self.APCurrent = initPack.APMax;
 		self.APMax = initPack.APMax;
 		self.partyLeader = initPack.partyLeader;
 		self.experience = initPack.experience;
@@ -16,7 +16,7 @@
 		self.bodyLevel = initPack.bodyLevel;
 		self.bodyExperience = initPack.bodyExperience;
 		self.readyToBattle = initPack.readyGoBattle;
-		
+		//console.log("Player AP is set by initPack to " + initPack.APMax + " and current to " + initPack.APCurrent);
 		//Soul stats
 		self.soulDamage = initPack.soulDamage;
 		self.soulHealth = initPack.soulHealth;
@@ -35,7 +35,7 @@
 		self.inMenuChar = false;
 		self.inStart = true;
 		
-		self.Sprite = PIXI.Sprite.fromImage('client/img/Battle/' + self.body.name +'.png');
+		self.Sprite = PIXI.Sprite.fromImage('client/img/Battle/Bodies/' + self.body.name +'.png');
 		self.healthText = new PIXI.Text('', healthStyle);
 		
 		self.Sprite.interactive = true;
@@ -103,6 +103,7 @@
 	}
 		
 	Player.onPlayerInfoChange = function(playerID){
+		
 		var pname = Player.list[playerID].id.toString();
 		var ptarget = "";
 		var pready = "Not ready";
@@ -110,7 +111,27 @@
 		else ptarget = (Player.list[playerID].target.toString()).substring(2,5);
 		if(Player.list[playerID].ready) pready = "Ready";
 		Player.list[playerID].healthText.text = ('Player' + pname.substring(2,5) + " HP:" + Player.list[playerID].healthCurrent + "\nAP: " + Player.list[playerID].APCurrent + "\nDamage: "  + Player.list[playerID].dieAmount  +"d"+ Player.list[playerID].dieSize + "\nTarget: " + ptarget + "\n" + pready);
+		//console.log(Player.list[playerID].APCurrent + " this should be AP now? in single update");
 	}
+	
+	Player.onLobbyInfoChange = function(lobbyId){
+		var pname = "";
+		var ptarget = "";
+		var pready = "Not ready";
+		//console.log("Updating player stats in lobby " + lobbyId);
+		for(var i in Player.list){
+			pname = Player.list[i].id.toString();
+			if(Player.list[i].lobby.id == lobbyId){
+				//console.log("updated...");
+				if(Player.list[i].target == null) ptarget = "";
+				else ptarget = (Player.list[i].target.toString()).substring(2,5);
+				if(Player.list[i].ready) pready = "Ready";
+				Player.list[i].healthText.text = ('Player' + pname.substring(2,5) + " HP:" + Player.list[i].healthCurrent + "\nAP: " + Player.list[i].APCurrent + "\nDamage: "  + Player.list[i].dieAmount  +"d"+ Player.list[i].dieSize + "\nTarget: " + ptarget + "\n" + pready);
+				//console.log(Player.list[i].APCurrent + " this should be AP now?");
+			}
+		}
+	}
+	
 	
 	Player.getPlayerID = function(num){
 	var counter = 0;

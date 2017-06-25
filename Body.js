@@ -31,13 +31,13 @@ var Body = function(param){
 	return self;
 }
 Body.getBody = function(difficulty){
-	var index = Math.floor(Math.random() * ((difficulty+2)-(difficulty-2))+difficulty-2);
+	//console.log("Getting body with " + difficulty + " difficulty");
+	var index = Math.round(Math.random() * ((difficulty+3)-(difficulty))+difficulty);;
 	if(index > Body.list.length-1)
 		index = Body.list.length-1
 	if(index < 0)
 		index = 0;
 	
-	console.log(index);
 	return(Body.list[index]);
 }
 
@@ -153,6 +153,315 @@ Body.Turtle = Body({
 	levelBonuses: [ 40, 5, 3, 2 ],
 });
 Body.list.push(Body.Turtle);
+
+Body.Orphan = Body({
+	name:"Orphan",
+	id:9,
+	healthMax: 150,
+	APMax: 14,
+	dieSize: 5,
+	dieAmount: 2,
+	maxLevel: 13,
+	levelBonuses: [ 40, 5, 3, 2 ],
+});
+Body.list.push(Body.Orphan);
+
+Body.Straydog = Body({
+	name:"Stray dog",
+	id:10,
+	healthMax: 150,
+	APMax: 14,
+	dieSize: 5,
+	dieAmount: 2,
+	maxLevel: 13,
+	levelBonuses: [ 40, 5, 3, 2 ],
+});
+Body.list.push(Body.Straydog);
+
+
+Body.Wasteelemental = Body({
+	name:"Waste elemental",
+	id:11,
+	healthMax: 150,
+	APMax: 14,
+	dieSize: 5,
+	dieAmount: 2,
+	maxLevel: 13,
+	levelBonuses: [ 40, 5, 3, 2 ],
+});
+Body.list.push(Body.Wasteelemental);
+
+
+Body.Tomcat = Body({
+	name:"Tomcat",
+	id:12,
+	healthMax: 150,
+	APMax: 14,
+	dieSize: 5,
+	dieAmount: 2,
+	maxLevel: 13,
+	levelBonuses: [ 40, 5, 3, 2 ],
+});
+Body.list.push(Body.Tomcat);
+
+
+Body.Giantcatfish = Body({
+	name:"Giant catfish",
+	id:13,
+	healthMax: 150,
+	APMax: 14,
+	dieSize: 5,
+	dieAmount: 2,
+	maxLevel: 13,
+	levelBonuses: [ 40, 5, 3, 2 ],
+});
+Body.list.push(Body.Giantcatfish);
+
+
+Body.Goblin = Body({
+	name:"Goblin",
+	id:14,
+	healthMax: 150,
+	APMax: 14,
+	dieSize: 5,
+	dieAmount: 2,
+	maxLevel: 13,
+	levelBonuses: [ 40, 5, 3, 2 ],
+});
+Body.list.push(Body.Goblin);
+
+
+Body.Angryfisherman = Body({
+	name:"Angry fisherman",
+	id:15,
+	healthMax: 150,
+	APMax: 14,
+	dieSize: 5,
+	dieAmount: 2,
+	maxLevel: 13,
+	levelBonuses: [ 40, 5, 3, 2 ],
+});
+Body.list.push(Body.Angryfisherman);
+
+
+Body.Distrubedswan = Body({
+	name:"Distrubed swan",
+	id:16,
+	healthMax: 150,
+	APMax: 14,
+	dieSize: 5,
+	dieAmount: 2,
+	maxLevel: 13,
+	levelBonuses: [ 40, 5, 3, 2 ],
+});
+Body.list.push(Body.Distrubedswan);
+
+Body.Pickpocket = Body({
+	name:"Pick pocket",
+	id:17,
+	healthMax: 150,
+	APMax: 14,
+	dieSize: 5,
+	dieAmount: 2,
+	maxLevel: 13,
+	levelBonuses: [ 40, 5, 3, 2 ],
+});
+Body.list.push(Body.Pickpocket);
+
+
+Body.Alphadog = Body({
+	name:"Alpha dog",
+	id:18,
+	healthMax: 150,
+	APMax: 14,
+	dieSize: 5,
+	dieAmount: 2,
+	maxLevel: 13,
+	levelBonuses: [ 40, 5, 3, 2 ],
+});
+Body.list.push(Body.Alphadog);
+
+
+Body.Swindler = Body({
+	name:"Swindler",
+	id:19,
+	healthMax: 150,
+	APMax: 14,
+	dieSize: 5,
+	dieAmount: 2,
+	maxLevel: 13,
+	levelBonuses: [ 40, 5, 3, 2 ],
+});
+Body.list.push(Body.Swindler);
+
+
+Body.Duelist = Body({
+	name:"Duelist",
+	id:20,
+	healthMax: 150,
+	APMax: 14,
+	dieSize: 5,
+	dieAmount: 2,
+	maxLevel: 13,
+	levelBonuses: [ 40, 5, 3, 2 ],
+});
+Body.list.push(Body.Duelist);
+
+
+Body.Boar = Body({
+	name:"Boar",
+	id:21,
+	healthMax: 150,
+	APMax: 14,
+	dieSize: 5,
+	dieAmount: 2,
+	maxLevel: 13,
+	levelBonuses: [ 40, 5, 3, 2 ],
+});
+Body.list.push(Body.Boar);
+
+
+Body.Wolf = Body({
+	name:"Wolf",
+	id:22,
+	healthMax: 150,
+	APMax: 14,
+	dieSize: 5,
+	dieAmount: 2,
+	maxLevel: 13,
+	levelBonuses: [ 40, 5, 3, 2 ],
+});
+Body.list.push(Body.Wolf);
+
+
+Body.Giantspider = Body({
+	name:"Giant spider",
+	id:23,
+	healthMax: 150,
+	APMax: 14,
+	dieSize: 5,
+	dieAmount: 2,
+	maxLevel: 13,
+	levelBonuses: [ 40, 5, 3, 2 ],
+});
+Body.list.push(Body.Giantspider);
+
+
+Body.Porcupine = Body({
+	name:"Turtle",
+	id:24,
+	healthMax: 150,
+	APMax: 14,
+	dieSize: 5,
+	dieAmount: 2,
+	maxLevel: 13,
+	levelBonuses: [ 40, 5, 3, 2 ],
+});
+Body.list.push(Body.Porcupine);
+
+
+Body.Troll = Body({
+	name:"Troll",
+	id:25,
+	healthMax: 150,
+	APMax: 14,
+	dieSize: 5,
+	dieAmount: 2,
+	maxLevel: 13,
+	levelBonuses: [ 40, 5, 3, 2 ],
+});
+Body.list.push(Body.Troll);
+
+
+Body.Giantrat = Body({
+	name:"Giant rat",
+	id:26,
+	healthMax: 150,
+	APMax: 14,
+	dieSize: 5,
+	dieAmount: 2,
+	maxLevel: 13,
+	levelBonuses: [ 40, 5, 3, 2 ],
+});
+Body.list.push(Body.Giantrat);
+
+
+Body.Alligator = Body({
+	name:"Alligator",
+	id:27,
+	healthMax: 150,
+	APMax: 14,
+	dieSize: 5,
+	dieAmount: 2,
+	maxLevel: 13,
+	levelBonuses: [ 40, 5, 3, 2 ],
+});
+Body.list.push(Body.Alligator);
+
+
+Body.Unstableflesh = Body({
+	name:"Unstable flesh",
+	id:28,
+	healthMax: 150,
+	APMax: 14,
+	dieSize: 5,
+	dieAmount: 2,
+	maxLevel: 13,
+	levelBonuses: [ 40, 5, 3, 2 ],
+});
+Body.list.push(Body.Unstableflesh);
+
+Body.Goblinshaman = Body({
+	name:"Goblin shaman",
+	id:29,
+	healthMax: 150,
+	APMax: 14,
+	dieSize: 5,
+	dieAmount: 2,
+	maxLevel: 13,
+	levelBonuses: [ 40, 5, 3, 2 ],
+});
+Body.list.push(Body.Goblinshaman);
+
+Body.Floatingeye = Body({
+	name:"Floating eye",
+	id:30,
+	healthMax: 150,
+	APMax: 14,
+	dieSize: 5,
+	dieAmount: 2,
+	maxLevel: 13,
+	levelBonuses: [ 40, 5, 3, 2 ],
+});
+Body.list.push(Body.Floatingeye);
+
+Body.Cavebear = Body({
+	name:"Cave bear",
+	id:31,
+	healthMax: 150,
+	APMax: 14,
+	dieSize: 5,
+	dieAmount: 2,
+	maxLevel: 13,
+	levelBonuses: [ 40, 5, 3, 2 ],
+});
+Body.list.push(Body.Cavebear);
+
+Body.Forgottenminer = Body({
+	name:"Forgotten miner",
+	id:32,
+	healthMax: 150,
+	APMax: 14,
+	dieSize: 5,
+	dieAmount: 2,
+	maxLevel: 13,
+	levelBonuses: [ 40, 5, 3, 2 ],
+});
+Body.list.push(Body.Forgottenminer);
+
+
+
+
 
 	
 module.exports = Body;

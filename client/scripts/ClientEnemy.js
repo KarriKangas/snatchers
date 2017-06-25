@@ -16,7 +16,7 @@ var Enemy = function(initPack){
 	self.attackFrame = 0;
 	self.attacking = false;
 	
-	self.Sprite = PIXI.Sprite.fromImage('client/img/Battle/' + self.body.name +'.png');
+	self.Sprite = PIXI.Sprite.fromImage('client/img/Battle/Bodies/' + self.body.name +'.png');
 	self.Sprite.scale.x = -1;
 	self.DeadSprite = PIXI.Sprite.fromImage('client/img/Battle/Dead.png');
 	self.DeadSprite.scale.x = -1;
@@ -38,7 +38,7 @@ var Enemy = function(initPack){
 			
 			
 	Enemy.list[self.id] = self;
-	console.log("AN ENEMY WAS CREATED WITH LOBBY " + self.lobby);
+	//console.log("AN ENEMY WAS CREATED WITH LOBBY " + self.lobby);
 	Enemy.onEnemyInfoChange(self.id);
 	return self;
 		
@@ -60,4 +60,16 @@ Enemy.getEnemyListPosition = function(id){
 Enemy.onEnemyInfoChange = function(enemyID){
 	var ename = Enemy.list[enemyID].id.toString();
 	Enemy.list[enemyID].healthText.text = ('Enemy' + ename.substring(2,5) + " HP:" + Enemy.list[enemyID].healthCurrent + "\nAP: " + Enemy.list[enemyID].APCurrent + "\nDamage: "  + Enemy.list[enemyID].dieAmount  +"d"+ Enemy.list[enemyID].dieSize);
+}
+
+Enemy.onLobbyInfoChange = function(lobbyId){
+	console.log("Updating enemy stats in lobby " + lobbyId);
+	for(var i in Enemy.list){
+		var ename = Enemy.list[i].id.toString();
+		ename = Enemy.list[i].id.toString();
+		if(Enemy.list[i].lobby.id == lobbyId){
+			console.log("Enemy updated with current ap of " + Enemy.list[i].APCurrent);
+			Enemy.list[i].healthText.text = ('Enemy' + ename.substring(2,5) + " HP:" + Enemy.list[i].healthCurrent + "\nAP: " + Enemy.list[i].APCurrent + "\nDamage: "  + Enemy.list[i].dieAmount  +"d"+ Enemy.list[i].dieSize);
+		}
+	}
 }

@@ -15,6 +15,7 @@
 	<script src="client/scripts/ClientPlayer.js"></script>
 	<script src="client/scripts/ClientEnemy.js"></script>
 	<script src="client/scripts/Drawer.js"></script>
+	<script src="client/scripts/FloatingText.js"></script>
 	
 	<body>
 	<div id="signDiv" style="padding: 3px; margin-left:305px; margin-top:200px; width: 175px; font-family:'Trebuchet MS'";>
@@ -77,7 +78,7 @@
 		
 		socket.on('lobbyJoin', function(data){
 			lobbyDiv.style.display = "none";
-			console.log("Player " + data.id + " joined " + data.lobby.id);
+			//console.log("Player " + data.id + " joined " + data.lobby.id);
 			Player.list[data.id].lobby = data.lobby;
 			Player.list[data.id].partyLeader = data.leader;
 			Drawer.initMenu();	
@@ -85,9 +86,9 @@
 		});
 		
 		socket.on('addLobbyPlayer', function(data){
-			console.log("I AM PLAYER " + selfId);
-			console.log("ADDING A NEW PLAYER TO CONNECTED PLAYERS LOBBY");
-			console.log(data.player + " and " + data.player.id);
+			//console.log("I AM PLAYER " + selfId);
+			//console.log("ADDING A NEW PLAYER TO CONNECTED PLAYERS LOBBY");
+			//console.log(data.player + " and " + data.player.id);
 			if(data.player.id != selfId)
 				new Player(data.player);	
 			
@@ -100,7 +101,7 @@
 		var menuInited = false;
 		var startInited = false;
 		var enemyTimer = 0;
-		console.log("I am player " + selfId + " and also " + Player.list[selfId]);
+		
 		pixi.ticker.add(()=>
 		{
 			if(Player.list[selfId] && Player.list[selfId].inStart){
@@ -118,8 +119,10 @@
 			if(Player.list[selfId] && Player.list[selfId].lobby != null && Player.list[selfId].inBattle){
 				if(!battleInited)
 					Drawer.initBattle();
-				if(!Player.list[selfId].inRewards)
+				if(!Player.list[selfId].inRewards){
 					Drawer.drawBattle();
+					FloatingText.MoveTexts();
+					}
 			}		
 				
 		});
@@ -127,7 +130,7 @@
 			//MENU BUTTONS
 			
 			socket.on('allPlayersReady', function(data){
-				console.log("ALL PLAYERS ARE READY, LEADER, CHOOSE YOUR ADVENTURE!");
+				//console.log("ALL PLAYERS ARE READY, LEADER, CHOOSE YOUR ADVENTURE!");
 			
 			});
 			
@@ -137,9 +140,10 @@
 			});
 				
 			socket.on('battleTransition', function(data){
-				console.log("Transitioning to battle...");
+				//console.log("Transitioning to battle...");
 				Player.list[selfId].inBattle = true;
 				Player.list[selfId].inMenu = false;
+				Player.onLobbyInfoChange(Player.list[selfId].lobby.id);
 			});
 			
 			socket.on('showRewards',function(data){
@@ -187,7 +191,18 @@
 			socket.on('atkConfirm',function(data){
 				Player.list[data.player].attacking = true;
 				Player.list[data.player].target = data.target;
-				Player.onPlayerInfoChange(data.player);				
+				Player.onPlayerInfoChange(data.player);	
+
+				setTimeout(function(){
+					var floatingText = FloatingText({
+						lobby:Player.list[data.player].lobby.id,
+						message:data.damage,
+						x:Enemy.list[data.target].Sprite.x-50,
+						y:Enemy.list[data.target].Sprite.y,
+					});
+					
+					
+				}, 500);
 			});
 			
 			socket.on('confirmRdy', function(data){
@@ -218,7 +233,11 @@
 					Player.onPlayerInfoChange(Player.list[i].id);
 					console.log("Player info change on player turn!");
 				}
-			
+				
+				//SHOULD USE A CALLBACK (make sure every player has received updated enemy infos)
+				setTimeout(function(){
+					Enemy.onLobbyInfoChange(data.lobbyId);
+				 }, 200);
 			});
 			
 			socket.on('snatchSuccess', function(data){
@@ -268,7 +287,7 @@
 			for(var i = 0; i < data.player.length; i++){
 				var pack = data.player[i];
 				var p = Player.list[pack.id];
-
+				//console.log("Update pack is giving an AP of " + pack.APMax);
 				if(p){
 					if(pack.maxHealth !== undefined && pack.maxHealth !== p.maxHealth)
 						p.maxHealth = pack.maxHealth;

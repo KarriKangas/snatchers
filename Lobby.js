@@ -10,7 +10,7 @@ var Lobby = function(){
 	instance.enemyTimer = 0;
 	instance.playerTurn = true;
 	
-	console.log("New lobby created!\nName: "+ instance.name + "\nPassword: " + instance.password);
+	console.log("New lobby created!   "+ instance.name + " /// " + instance.password);
 	Lobby.list[instance.id] = instance;
 	return instance;
 }
@@ -21,19 +21,19 @@ Lobby.list = {};
 Lobby.AddPlayer = function(lobbyId, playerId){
 	Lobby.list[lobbyId].players[playerId] = playerId;
 	Player.list[playerId].lobby = Lobby.list[lobbyId];
-	console.log("Player " + playerId + " added to lobby " + lobbyId);
-	console.log("Lobby.list " + Lobby.list[lobbyId].id + " players " + Lobby.list[lobbyId].players[playerId] + " was added");
+	//console.log("Player " + playerId + " added to lobby " + lobbyId);
+	//console.log("Lobby.list " + Lobby.list[lobbyId].id + " players " + Lobby.list[lobbyId].players[playerId] + " was added");
 }
 
 Lobby.AddEnemy = function(lobbyId, enemyId){
 	Lobby.list[lobbyId].enemies[enemyId] = enemyId;
-	console.log("Enemy " + enemyId + " added to lobby " + lobbyId);
+	//console.log("Enemy " + enemyId + " added to lobby " + lobbyId);
 }
 
 Lobby.ArePlayersReady = function(lobbyId){
-	console.log("is player ready?");
+	//console.log("is player ready?");
 	for(var i in Lobby.list[lobbyId].players){
-		console.log(Lobby.list[lobbyId].players[i] + " listing players..." + " and is he ready?: " + Player.list[Lobby.list[lobbyId].players[i]].ready);
+		//console.log(Lobby.list[lobbyId].players[i] + " listing players..." + " and is he ready?: " + Player.list[Lobby.list[lobbyId].players[i]].ready);
 		if(!Player.list[Lobby.list[lobbyId].players[i]].ready){
 			//A player is not ready
 			return false;
@@ -52,7 +52,7 @@ Lobby.PlayerCount = function(lobbyId){
 }
 
 Lobby.ArePlayersGoReady = function(lobbyId){
-	console.log("Checking if players are ready in " + lobbyId);
+	//console.log("Checking if players are ready in " + lobbyId);
 	for(var i in Lobby.list[lobbyId].players){
 		if(!Player.list[Lobby.list[lobbyId].players[i]].readyGoBattle)
 			return false;
@@ -114,9 +114,6 @@ Lobby.AreEnemiesReady = function(lobbyId){
 }
 
 Lobby.AreEnemiesDead = function(lobbyId){
-	for(var i in Enemy.list)
-		console.log(Enemy.list[i].id +" listing enemies");
-	
 	for(var i in Lobby.list[lobbyId].enemies){
 		//console.log("checking lobby " + lobbyId);
 		//console.log("current check " + Enemy.list[Lobby.list[lobbyId].enemies[i]]);
@@ -127,5 +124,6 @@ Lobby.AreEnemiesDead = function(lobbyId){
 	}
 	return true;
 }
+
 
 module.exports = Lobby;

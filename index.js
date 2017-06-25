@@ -44,7 +44,7 @@ io.sockets.on('connection', function(socket){
 	socket.on('disconnect', function(){
 		delete SOCKET_LIST[socket.id];
 		Player.onDisconnect(socket);
-		console.log(socket.id + " disconnected");
+		//console.log(socket.id + " disconnected");
 		
 	});
 	
@@ -108,8 +108,8 @@ io.sockets.on('connection', function(socket){
 				});
 			}
 		}
-		console.log(Player.list[data.creatorId].id + " just joined " + lobby.id + "!!");
-		console.log("So players lobby is now " + Player.list[data.creatorId].lobby.name);
+		console.log(Player.list[data.creatorId].id + " just joined " + lobby.id);
+		//console.log("So players lobby is now " + Player.list[data.creatorId].lobby.name);
 		
 	});
 	
@@ -118,7 +118,7 @@ io.sockets.on('connection', function(socket){
 	socket.on('goBattle',function(data){
 		if(Player.list[data.id].readyGoBattle != true){
 			Player.list[data.id].readyGoBattle = true;
-			console.log(Player.list[data.id].id + " is now ready for battle!");
+			//console.log(Player.list[data.id].id + " is now ready for battle!");
 			for(var i in SOCKET_LIST){
 				Asocket = SOCKET_LIST[i];
 				Asocket.emit('confirmGoBattle', {
@@ -126,10 +126,10 @@ io.sockets.on('connection', function(socket){
 				});
 				
 			}
-			console.log(Player.list[data.id].id + " is now ready for battle!");
+			//console.log(Player.list[data.id].id + " is now ready for battle!");
 		}
 		
-		console.log("ARE PLAYERS READY?!");
+		//console.log("ARE PLAYERS READY?!");
 		if(!Lobby.ArePlayersGoReady([Player.list[data.id].lobby.id])){
 			console.log("ALL PLAYERS ARE NOT READY!");
 			return;
@@ -143,17 +143,17 @@ io.sockets.on('connection', function(socket){
 			});
 		}
 
-		console.log(Player.list[data.id].id + " is now ready for battle!");
+		//console.log(Player.list[data.id].id + " is now ready for battle!");
 	});
 	
 	//Battle starting 
 	socket.on('startBattle', function(data){
 		//console.log("startBattle received from: " + data.sender);
 		if(!Lobby.ArePlayersGoReady([Player.list[data.sender].lobby.id])){
-			console.log("ALL PLAYERS ARE NOT READY!");
+			//console.log("ALL PLAYERS ARE NOT READY!");
 			return;
 		}
-		console.log("ALL PLAYERS ARE READY, lets battle!");
+		//console.log("ALL PLAYERS ARE READY, lets battle!");
 		if(Player.list[data.sender].partyLeader && Player.ArePlayersGoReadyLobby(data.sender)){
 		createBattle(data.difficulty, Player.list[data.sender].lobby.id);
 			for(var i in SOCKET_LIST){
@@ -185,7 +185,8 @@ io.sockets.on('connection', function(socket){
 				var Asocket = SOCKET_LIST[i];
 				Asocket.emit("atkConfirm", {
 					player:data.id,
-					target:attack.Target.id,							
+					target:attack.Target.id,	
+					damage:attack.damage,
 				});
 			}
 		}
@@ -201,10 +202,10 @@ io.sockets.on('connection', function(socket){
 		}		
 		
 		//After every attack, check if all enemies are dead 
-		console.log("Checking if all enemies are deaD " + Lobby.AreEnemiesDead(Player.list[data.id].lobby.id));
-		console.log("checked lobby is  " + Player.list[data.id].lobby.id);
+		//console.log("Checking if all enemies are deaD " + Lobby.AreEnemiesDead(Player.list[data.id].lobby.id));
+		//console.log("checked lobby is  " + Player.list[data.id].lobby.id);
 		if(Lobby.AreEnemiesDead(Player.list[data.id].lobby.id)){
-			console.log("All enemies dead, display rewards");
+			//console.log("All enemies dead, display rewards");
 			createRewards(Player.list[data.id].lobby.id);
 		}
 	});
@@ -267,9 +268,9 @@ io.sockets.on('connection', function(socket){
 			});
 		}
 		
-		console.log("Checking if all players are ready?");
+		//console.log("Checking if all players are ready?");
 		if(!Lobby.ArePlayersReady(data.lobby.id)){
-			console.log("All players are not ready in lobby " + data.lobby.id);
+			//console.log("All players are not ready in lobby " + data.lobby.id);
 			return;
 		}
 		
@@ -277,13 +278,13 @@ io.sockets.on('connection', function(socket){
 			
 		
 		Lobby.list[data.lobby.id].playerTurn = false;
-		console.log("All players are ready, initiate enemy behavior!");
+		//console.log("All players are ready, initiate enemy behavior!");
 		initiateEnemyBehavior(data.lobby.id);	
 	});
 	
 	//Selection in battle
 	socket.on("selection", function(data){
-		console.log("Player " + data.player + " selected " + data.target);
+		//console.log("Player " + data.player + " selected " + data.target);
 		Player.list[data.player].target = data.target;
 		
 		for(var i in SOCKET_LIST){
@@ -339,6 +340,9 @@ io.sockets.on('connection', function(socket){
 					break;
 				
 			}
+			
+			Player.ApplySoulBonuses(Player.list[data.id].id);
+			
 			for(var i in SOCKET_LIST){
 				var Asocket = SOCKET_LIST[i];
 				Asocket.emit('releaseStatSuccess', {
@@ -431,7 +435,7 @@ setInterval(function(){
 				}
 				//Set all enemies to have max ap
 				for(var j in Enemy.list){
-					console.log(Enemy.list[j].lobby.id + " that is enemy lobby id, current lobby is " + Lobby.list[i].id);
+					//console.log(Enemy.list[j].lobby.id + " that is enemy lobby id, current lobby is " + Lobby.list[i].id);
 					if(Enemy.list[j].lobby.id == Lobby.list[i].id)
 						Enemy.list[j].APCurrent = Enemy.list[j].APMax;
 				}
@@ -452,31 +456,28 @@ function initiateEnemyBehavior(lobbyId){
 	var playerAmount = Player.getPlayerCount();
 	console.log("Initiating enemy behaviour in lobby " + lobbyId);
 	for(var i in Lobby.list[lobbyId].enemies){
-		//console.log(Enemy.list[i].id + " is acting...");
-		//if(Enemy.list[i].lobby.id == lobbyId){
-			if(Enemy.list[i].APCurrent >= 5){
 				Enemy.list[i].target = Player.list[Lobby.GetRandomPlayer(lobbyId)];
+				var attack = Attack({
+					attacker:Enemy.list[Lobby.list[lobbyId].enemies[i]],
+					target:Enemy.list[i].target,
+				});
 				
-				console.log(Enemy.list[i].id +" target is now " + Enemy.list[i].target.id);
+				//Apply this attack
+				Attack.ApplyAttack(attack.id, attack.Attacker, attack.Target);
 				
-				var damage = Enemy.list[i].dieAmount * (Math.floor(Math.random()*(Enemy.list[i].dieSize-1)+1));
-				
-				Player.list[Enemy.list[i].target.id].healthCurrent -= damage;
-				Enemy.list[i].APCurrent -= 5;
-				
-				var eIdToSend = Enemy.list[i].id;
-				var tIdToSend = Enemy.list[i].target.id;
-				for(var i in SOCKET_LIST){
-					var socket = SOCKET_LIST[i];
-					if(Player.list[socket.id].lobby.id == lobbyId){
-						socket.emit('enemyAttack', {
-							enemyID: eIdToSend,
-							targetID: tIdToSend,
-						});
+				if(attack.success){
+					var eIdToSend = Enemy.list[i].id;
+					var tIdToSend = Enemy.list[i].target.id;
+					for(var i in SOCKET_LIST){
+						var socket = SOCKET_LIST[i];
+						if(Player.list[socket.id].lobby.id == lobbyId){
+							socket.emit('enemyAttack', {
+								enemyID: eIdToSend,
+								targetID: tIdToSend,
+							});
+						}
 					}
 				}
-			}
-		//}
 	}
 }
 
@@ -530,7 +531,7 @@ function createRewards(lobbyId){
 						soul:true,
 						body:false,			
 					});
-					
+					Player.ApplySoulBonuses(Player.list[i].id);
 					console.log("Player leveled up!");
 					
 				}else{
@@ -551,6 +552,7 @@ function createRewards(lobbyId){
 							body:true,			
 						});
 						Player.ChangeBody(Player.list[i].id);
+						Player.ApplySoulBonuses(Player.list[i].id);
 						console.log("Players body leveled up, body has level bonuses of " + Player.list[i].body.levelBonuses[0] +"/"+ Player.list[i].body.levelBonuses[1] +"/"+ Player.list[i].body.levelBonuses[2]+"/"+ Player.list[i].body.levelBonuses[3]);
 					}else{
 						leveling = false;

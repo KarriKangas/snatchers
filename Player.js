@@ -21,25 +21,30 @@ var Player = function(param){
 	self.bodyExperience = 0;
 	
 	//Soul stats
-	self.soulDamage = 5.0;
-	self.soulHealth = 5.0;
-	self.soulAP = 5.0;
-	self.soulPoints = 5.0;
+	self.soulDamage = 1.0;
+	self.soulHealth = 1.0;
+	self.soulAP = 1.0;
+	self.soulPoints = 5;
 	
 	//THIS IS JUST FOR TESTING BEFORE DATABASE IMPLEMENTATION
 	if(!self.body)
 		self.body = Body.Wisp;
+	
+	Player.list[self.id] = self;
+	Player.ChangeBody(self.id);
+	Player.ApplySoulBonuses(self.id);
+	
 	self.getInitPack = function(){
 		return {
 			id:self.id,
 			lobby:self.lobby,
 			body:self.body,
-			healthMax:self.body.healthMax + (self.bodyLevel*self.body.levelBonuses[0]),
+			healthMax:self.body.healthMax ,
 			healthCurrent:self.body.healthMax,
-			APMax:self.APMax + (self.bodyLevel*self.body.levelBonuses[1]),
-			APCurrent:self.APCurrent,
-			dieSize:self.dieSize + (self.bodyLevel*self.body.levelBonuses[2]),
-			dieAmount:self.dieAmount + (self.bodyLevel*self.body.levelBonuses[3]),
+			APMax:self.APMax,
+			APCurrent:self.APMax,
+			dieSize:self.dieSize,
+			dieAmount:self.dieAmount,
 			readyGoBattle:self.readyGoBattle,
 			partyLeader:self.partyLeader,
 			experience:self.experience,
@@ -62,16 +67,17 @@ var Player = function(param){
 			healthCurrent:self.healthCurrent,
 			APMax:self.APMax,
 			APCurrent:self.APCurrent,
-			dieSize:self.dieSize,
+			dieSize:self.dieSize ,
 			dieAmount:self.dieAmount,
 		};
 	}
 	//Change body to update values
 
-	Player.list[self.id] = self;
-	Player.ChangeBody(self.id);
+	//Player.list[self.id] = self;
+	
 	
 	Player.initPack.push(self.getInitPack());
+	//console.log(self.getInitPack());
 	return self;
 	
 }
@@ -134,13 +140,25 @@ Player.onDisconnect = function(socket){
 
 Player.ChangeBody = function(id){
 	var body = Player.list[id].body;
-
+	Player.ApplySoulBonuses(id);
+}
+//THIS IS A PLACEHOLDER METHOD
+Player.ApplySoulBonuses = function(id){
+	var body = Player.list[id].body;
+	
 	Player.list[id].healthMax = body.healthMax + (Player.list[id].bodyLevel*body.levelBonuses[0]);
 	Player.list[id].healthCurrent = Player.list[id].healthMax;
 	Player.list[id].dieSize = body.dieSize + (Player.list[id].bodyLevel*body.levelBonuses[2]);
 	Player.list[id].dieAmount = body.dieAmount + (Player.list[id].bodyLevel*body.levelBonuses[3]);
 	Player.list[id].APMax = body.APMax + (Player.list[id].bodyLevel*body.levelBonuses[1]);
+	Player.list[id].APCurrent = Player.list[id].APMax;
+	
+	Player.list[id].healthMax += Player.list[id].healthMax * Player.list[id].soulHealth;
+	Player.list[id].APMax += Player.list[id].APMax * Player.list[id].soulAP;
+	Player.list[id].healthCurrent = Player.list[id].healthMax;
+	Player.list[id].APCurrent = Player.list[id].APMax;
 }
+
 
 Player.update = function(socket){
 	var pack = [];

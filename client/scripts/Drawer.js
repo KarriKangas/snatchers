@@ -35,10 +35,17 @@ var Drawer = function(){
 	var MenuInvButton = PIXI.Sprite.fromImage('client/img/Menu/InventoryButton.png');
 	var PartyButton = PIXI.Sprite.fromImage('client/img/Menu/PartyButton.png');
 	var BattleButton = PIXI.Sprite.fromImage('client/img/Menu/BattleButton.png');
-	var EasyButton = PIXI.Sprite.fromImage('client/img/Menu/EasyButton.png');
-	var MediumButton = PIXI.Sprite.fromImage('client/img/Menu/MediumButton.png');
-	var HardButton = PIXI.Sprite.fromImage('client/img/Menu/HardButton.png');
-		
+	
+	//Difficulties
+	var ForestBattle = PIXI.Sprite.fromImage('client/img/Menu/ForestBattle.png');
+	var SewerBattle = PIXI.Sprite.fromImage('client/img/Menu/SewerBattle.png');
+	var StreetBattle = PIXI.Sprite.fromImage('client/img/Menu/StreetBattle.png');
+	var RiversideBattle = PIXI.Sprite.fromImage('client/img/Menu/TodoBattle.png');
+	var NarrowstreetsBattle = PIXI.Sprite.fromImage('client/img/Menu/TodoBattle.png');
+	var DeepforestBattle = PIXI.Sprite.fromImage('client/img/Menu/TodoBattle.png');
+	var LostsewerBattle = PIXI.Sprite.fromImage('client/img/Menu/TodoBattle.png');
+	var CaveBattle = PIXI.Sprite.fromImage('client/img/Menu/TodoBattle.png');
+	
 	//CHAR Menu
 	var CharBlock1 = PIXI.Sprite.fromImage('client/img/Menu/Char/CharBlock.png');
 	var CharBlock2 = PIXI.Sprite.fromImage('client/img/Menu/Char/CharBlock.png');
@@ -76,7 +83,24 @@ var Drawer = function(){
 		fontWeight: 'bold',
 		fill: '#000000'
 	});
+	
+	var battleGoStyle = new PIXI.TextStyle({
+		fontFamily: 'Arial',
+		fontSize: 12,
+		fontWeight: 'bold',
+		fill: '#FFFFFF',
+		align: 'center'
+
+	});
 		
+	var ForestText = new PIXI.Text('Forest\nLevels: 1-5', battleGoStyle);
+	var SewerText = new PIXI.Text('Sewer\nLevels: 4-10', battleGoStyle);
+	var StreetText = new PIXI.Text('Street\nLevels: 9-15', battleGoStyle);
+	var RiversideText = new PIXI.Text('Not available', battleGoStyle);//('Riverside\nLevels: 14-20', battleGoStyle);
+	var NarrowstreetsText = new PIXI.Text('Not available', battleGoStyle);//('Narrow Streets\nLevels: 19-25', battleGoStyle);
+	var DeepforestText = new PIXI.Text('Not available', battleGoStyle);//('Deep Forest\nLevels: 24-30', battleGoStyle);	
+	var LostsewerText = new PIXI.Text('Not available', battleGoStyle);//('Lost Sewer\nLevels: 29-35', battleGoStyle);	
+	var CaveText = new PIXI.Text('Not available', battleGoStyle);//('Cave\nLevels: 34-40', battleGoStyle);
 	//TEXTS
 	var turnText = new PIXI.Text('', healthStyle);
 	var goBattleText = new PIXI.Text('', healthStyle);
@@ -138,26 +162,61 @@ var Drawer = function(){
 		Player.list[selfId].inMenu = true;
 	});
 	
-	EasyButton.on('pointerdown', () => {
+	ForestBattle.on('pointerdown', () => {
 		socket.emit('startBattle',{
 			sender:selfId,
 			difficulty: 1,
 		});		
 	});
 			
-	MediumButton.on('pointerdown', () => {
+	SewerBattle.on('pointerdown', () => {
 		socket.emit('startBattle',{
 			sender:selfId,
-			difficulty: 4,
+			difficulty: 5,
 		});
 	});
 			
-	HardButton.on('pointerdown', () => {
+	StreetBattle.on('pointerdown', () => {
 		socket.emit('startBattle',{
 			sender:selfId,
-			difficulty: 6,
+			difficulty: 9,
 		});
 	});
+	
+	/*RiversideBattle.on('pointerdown', () => {
+		socket.emit('startBattle',{
+			sender:selfId,
+			difficulty: 13,
+		});
+	});
+	
+	NarrowstreetsBattle.on('pointerdown', () => {
+		socket.emit('startBattle',{
+			sender:selfId,
+			difficulty: 17,
+		});
+	});
+	
+	DeepforestBattle.on('pointerdown', () => {
+		socket.emit('startBattle',{
+			sender:selfId,
+			difficulty: 21,
+		});
+	});
+	
+	LostsewerBattle.on('pointerdown', () => {
+		socket.emit('startBattle',{
+			sender:selfId,
+			difficulty: 24,
+		});
+	});
+	
+	CaveBattle.on('pointerdown', () => {
+		socket.emit('startBattle',{
+			sender:selfId,
+			difficulty: 29,
+		});
+	});*/
 	
 	//RESET MENU BUTTONS
 	ReleaseButton.on('pointerdown',() => {
@@ -377,22 +436,26 @@ var Drawer = function(){
 			for(var i in Player.list){
 				if(Player.list[i].attacking){
 					if(Player.list[i].lobby != null && Player.list[i].lobby.id == Player.list[selfId].lobby.id){
-				//console.log("animating player " + Player.list[i].attackFrame);
+						//THIS PART IS FOR PLAYER MOVING TOWARDS ENEMY
 						if(Player.list[i].attackFrame < 30){
 							Player.onPlayerInfoChange(Player.list[i].id);
 							Player.list[i].Sprite.x += 15;
 							Player.list[i].Sprite.y -= (Player.list[i].Sprite.y - Enemy.list[Player.list[i].target].Sprite.y)/30
 							Player.list[i].attackFrame++;
 						}
+						//THIS PART IS FOR THE PLAYER HITTING AND MOVING AWAY FROM THE ENEMY
 						else if(Player.list[i].attackFrame >= 30 && Player.list[i].attackFrame < 60){
 							Player.list[i].Sprite.x -= 15;
 							Player.list[i].Sprite.y += (Player.list[i].Sprite.y - Enemy.list[Player.list[i].target].Sprite.y)/30
 							Player.list[i].attackFrame++;
 							Enemy.onEnemyInfoChange(Player.list[i].target);
+								
+							
 						}
+						//THIS PART IS FOR PLAYER SETTLING TO HIS OWN POSITION
 						else if(Player.list[i].attackFrame >= 60) {
-						Player.list[i].attacking = false;
-						Player.list[i].attackFrame = 0;					
+							Player.list[i].attacking = false;
+							Player.list[i].attackFrame = 0;					
 						}
 					}
 				}			
@@ -409,18 +472,21 @@ var Drawer = function(){
 						if(Enemy.list[i].currentWait <= 0){
 						//console.log("animating enemy " + Enemy.list[i].attackFrame);
 						//ASK SERVER FOR ANIMATION
+						//THIS PART IS FOR ENEMY MOVING TOWARDS PLAYER
 							if(Enemy.list[i].attackFrame < 30){
 								Enemy.list[i].Sprite.x -= 15;
 								Enemy.list[i].Sprite.y -= (Enemy.list[i].Sprite.y - Player.list[Enemy.list[i].target].Sprite.y)/30
 								Enemy.list[i].attackFrame++;
 							}
 						//ASK SERVER FOR UPDATED HEALTH NUMBERS + DAMAGE
+						//THIS PART IS FOR ENEMY HITTING PLAYER AND MOVING AWAY FROM THE PLAYER
 							else if(Enemy.list[i].attackFrame >= 30 && Enemy.list[i].attackFrame < 60){
 								Enemy.list[i].Sprite.x += 15;
 								Enemy.list[i].Sprite.y += (Enemy.list[i].Sprite.y - Player.list[Enemy.list[i].target].Sprite.y)/30
 								Enemy.list[i].attackFrame++;
 								Player.onPlayerInfoChange(Enemy.list[i].target);
 							}
+							//THIS PART IS FOR ENEMY SETTLING TO HIS OWN POSITION
 							else if(Enemy.list[i].attackFrame >= 60) {
 									Enemy.list[i].currentWait = Enemy.list[i].waitTime;
 									Enemy.list[i].attacking = false;
@@ -491,10 +557,27 @@ var Drawer = function(){
 			]
 			
 			var difficultyButtons = [
-				EasyButton,
-				MediumButton,
-				HardButton,
+				ForestBattle,
+				SewerBattle,
+				StreetBattle,
+				RiversideBattle,
+				NarrowstreetsBattle,
+				LostsewerBattle,
+				DeepforestBattle,
+				CaveBattle,
+			]
 			
+			var difficultyTexts = [
+				ForestText,
+				SewerText,
+				StreetText,
+				RiversideText,
+				NarrowstreetsText,
+				LostsewerText,
+				DeepforestText,
+				CaveText,
+				
+				
 			]
 			
 			for(var i = 0; i < menuUIButtons.length; i++){
@@ -510,11 +593,20 @@ var Drawer = function(){
 				for(var i = 0; i < difficultyButtons.length; i++){
 					difficultyButtons[i].interactive = true;
 					difficultyButtons[i].buttonMode = true;
+					difficultyButtons[i].scale.x = 0.2;
+					difficultyButtons[i].scale.y = 0.2;
 					difficultyButtons[i].anchor.set(0.5);
-					difficultyButtons[i].x = 500;
-					difficultyButtons[i].y = 125+125*i;
+					difficultyButtons[i].x = 300+(i%4)*150;
+					difficultyButtons[i].y = 125+125*Math.floor(i/4);
 					pixi.stage.addChild(difficultyButtons[i]);
-				}	
+				}
+
+				for(var i = 0; i < difficultyTexts.length; i++){
+					difficultyTexts[i].anchor.set(0.5);
+					difficultyTexts[i].x = 300+(i%4)*150;
+					difficultyTexts[i].y = 165+125*Math.floor(i/4);
+					pixi.stage.addChild(difficultyTexts[i]);	
+				}
 				chooseDifText.text = "Choose an adventure for your party";
 			}else{
 				leaderChoosingText.text = "Party leader is choosing an adventure...";
