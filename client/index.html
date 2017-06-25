@@ -221,6 +221,17 @@
 					Enemy.list[data.enemyID].target = data.targetID;
 				}
 				enemyTimer = 0;
+				
+				setTimeout(function(){
+					var floatingText = FloatingText({
+						lobby:Player.list[data.targetID].lobby.id,
+						message:data.damage,
+						x:Player.list[data.targetID].Sprite.x+Math.random()*((50-10)+10),
+						y:Player.list[data.targetID].Sprite.y,
+					});
+					
+					console.log(Enemy.list[data.enemyID].waitTime);
+				}, 700+(Enemy.list[data.enemyID].waitTime*4));
 			});
 			
 			socket.on('playerTurn', function(data){
@@ -244,7 +255,7 @@
 				Player.list[data.id].body = data.body;
 				Player.list[data.id].bodyLevel = 1;
 				Player.list[data.id].bodyExperience = 0;
-				Player.list[data.id].Sprite = PIXI.Sprite.fromImage('client/img/Battle/' + data.body.name +'.png');
+				Player.list[data.id].Sprite = PIXI.Sprite.fromImage('client/img/Battle/Bodies/' + data.body.name +'.png');
 				console.log(data.id + " new body is a " + data.body.name + "!");
 				console.log(data.id + " has now bodyLevel " + Player.list[data.id].bodyLevel + " and experience " + Player.list[data.id].bodyExperience);
 			

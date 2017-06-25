@@ -474,6 +474,7 @@ function initiateEnemyBehavior(lobbyId){
 							socket.emit('enemyAttack', {
 								enemyID: eIdToSend,
 								targetID: tIdToSend,
+								damage:attack.damage,
 							});
 						}
 					}

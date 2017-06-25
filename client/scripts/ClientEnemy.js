@@ -18,6 +18,7 @@ var Enemy = function(initPack){
 	
 	self.Sprite = PIXI.Sprite.fromImage('client/img/Battle/Bodies/' + self.body.name +'.png');
 	self.Sprite.scale.x = -1;
+	
 	self.DeadSprite = PIXI.Sprite.fromImage('client/img/Battle/Dead.png');
 	self.DeadSprite.scale.x = -1;
 	self.healthText = new PIXI.Text('', healthStyle);

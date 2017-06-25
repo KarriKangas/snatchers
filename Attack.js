@@ -24,6 +24,9 @@ Attack.ApplyAttack = function(id, attacker, target){
 	//Check target has id>5 (means it is an enemy) 
 	//Check that attacker has enough AP
 	//Check if attacker HIT target
+	if(!target)
+		return;
+	
 	var playerAttack = false;
 	if(target.id > MIN_ENEMYID)
 		playerAttack = true;
