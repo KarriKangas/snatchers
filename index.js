@@ -472,9 +472,11 @@ function initiateEnemyBehavior(lobbyId){
 						var socket = SOCKET_LIST[i];
 						if(Player.list[socket.id].lobby.id == lobbyId){
 							socket.emit('enemyAttack', {
+								//This is kind of weird at the moment, attack is emitted only for testing
+								//Basically attack contains info of attacker and target so they are useless once refactored
 								enemyID: eIdToSend,
 								targetID: tIdToSend,
-								damage:attack.damage,
+								attack:attack,
 							});
 						}
 					}

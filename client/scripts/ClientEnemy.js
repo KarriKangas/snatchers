@@ -11,10 +11,11 @@ var Enemy = function(initPack){
 	self.dead = false;
 	self.body = initPack.body;
 	//Random wait time 20-60 frames for enemy actions
-	self.waitTime = initPack.waitTime;
+	self.waitTime = 0 //initPack.waitTime;
 	self.currentWait = initPack.waitTime;
 	self.attackFrame = 0;
 	self.attacking = false;
+	self.currentAttack = null;
 	
 	self.Sprite = PIXI.Sprite.fromImage('client/img/Battle/Bodies/' + self.body.name +'.png');
 	self.Sprite.scale.x = -1;
@@ -64,12 +65,10 @@ Enemy.onEnemyInfoChange = function(enemyID){
 }
 
 Enemy.onLobbyInfoChange = function(lobbyId){
-	console.log("Updating enemy stats in lobby " + lobbyId);
 	for(var i in Enemy.list){
 		var ename = Enemy.list[i].id.toString();
 		ename = Enemy.list[i].id.toString();
 		if(Enemy.list[i].lobby.id == lobbyId){
-			console.log("Enemy updated with current ap of " + Enemy.list[i].APCurrent);
 			Enemy.list[i].healthText.text = ('Enemy' + ename.substring(2,5) + " HP:" + Enemy.list[i].healthCurrent + "\nAP: " + Enemy.list[i].APCurrent + "\nDamage: "  + Enemy.list[i].dieAmount  +"d"+ Enemy.list[i].dieSize);
 		}
 	}

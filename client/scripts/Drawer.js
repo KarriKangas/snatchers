@@ -481,10 +481,15 @@ var Drawer = function(){
 						//ASK SERVER FOR UPDATED HEALTH NUMBERS + DAMAGE
 						//THIS PART IS FOR ENEMY HITTING PLAYER AND MOVING AWAY FROM THE PLAYER
 							else if(Enemy.list[i].attackFrame >= 30 && Enemy.list[i].attackFrame < 60){
+								//If frame = 30, draw damage
+								if(Enemy.list[i].attackFrame == 30)
+									drawFloatingText(Enemy.list[i].attack);
 								Enemy.list[i].Sprite.x += 15;
 								Enemy.list[i].Sprite.y += (Enemy.list[i].Sprite.y - Player.list[Enemy.list[i].target].Sprite.y)/30
 								Enemy.list[i].attackFrame++;
 								Player.onPlayerInfoChange(Enemy.list[i].target);
+							
+								
 							}
 							//THIS PART IS FOR ENEMY SETTLING TO HIS OWN POSITION
 							else if(Enemy.list[i].attackFrame >= 60) {
