@@ -20,8 +20,9 @@ var Player = function(param){
 	self.bodyLevel = 1;
 	self.bodyExperience = 0;
 	
+	
 	//Soul stats
-	self.soulDamage = 1.0;
+	self.soulDamage = 5.0;
 	self.soulHealth = 1.0;
 	self.soulAP = 1.0;
 	self.soulPoints = 5;
@@ -127,13 +128,21 @@ Player.onDisconnect = function(socket){
 						newLeader:Player.list[i].id,
 					});
 				}
+				
+				
 			}
 			n++;
 		}
 	}
+	
 	//Delete player from Lobby (if player has a lobby) as well as global Player.list
-	if(Player.list[socket.id].lobby != null)
+	//And delete the whole lobby!
+	if(Player.list[socket.id].lobby != null)	
 		delete Player.list[socket.id].lobby.players[socket.id];	
+		
+	
+	
+	
 	delete Player.list[socket.id];
 	Player.removePack.push(socket.id);
 }

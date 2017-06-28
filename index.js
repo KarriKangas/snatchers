@@ -4,20 +4,16 @@ var serv = require('http').Server(app);
 
 var Lobby = require('./Lobby.js');
 var Entity = require('./Entity.js');
-//THIS ORDER BELOW DEFINES WHICH CLASSES CAN REQUIRE WHICH CLASSES
-//IN THIS CURRENT ORDER
-//Player
-//Enemy
-//ONLY Player.js can REQUIRE Enemy.js
-//REQUIRING Player.js IN Enemy.js WILL NOT WORK
-//WHY? DON'T ASK? WILL IT BE FIXED? MAYBE!
+
 var Player = require('./Player.js');
 var Enemy = require('./Enemy.js');
 
-//This line was added...
 var Body = require('./Body.js');
 
 var Attack = require('./Attack.js');
+
+var Skill = require('./Skill.js');
+
 const XPBASE = 50;
 const XPFACTOR = 2.5;
 
@@ -42,8 +38,17 @@ io.sockets.on('connection', function(socket){
 	
 	//On player disconnect
 	socket.on('disconnect', function(){
+		var deletedPlayerLobbyId = -1;
+		if(Player.list[socket.id].lobby != null)
+			deletedPlayerLobbyId = Player.list[socket.id].lobby.id;
+		
 		delete SOCKET_LIST[socket.id];
 		Player.onDisconnect(socket);
+		
+		if(deletedPlayerLobbyId != -1 && Lobby.PlayerCount(deletedPlayerLobbyId) == 0){
+			Lobby.DeleteLobby(deletedPlayerLobbyId);
+		}
+		
 		//console.log(socket.id + " disconnected");
 		
 	});
@@ -121,9 +126,11 @@ io.sockets.on('connection', function(socket){
 			//console.log(Player.list[data.id].id + " is now ready for battle!");
 			for(var i in SOCKET_LIST){
 				Asocket = SOCKET_LIST[i];
-				Asocket.emit('confirmGoBattle', {
-					id:data.id,
-				});
+				if(Asocket.id == data.id){
+					Asocket.emit('confirmGoBattle', {
+						id:data.id,
+					});
+				}
 				
 			}
 			//console.log(Player.list[data.id].id + " is now ready for battle!");
@@ -169,24 +176,28 @@ io.sockets.on('connection', function(socket){
 			}
 	});
 	
-	//Attack click in battle
+	//Attack click in battle THIS IS PLAYER ATTACK
 	socket.on("atk", function(data){
+		console.log(data);
 		//Create a new attack with attacker + target
 		var attack = Attack({
 			attacker:Player.list[data.id],
 			target:Enemy.list[Player.list[data.id].target]
 		});
+		
+		
 		//Apply this attack
 		Attack.ApplyAttack(attack.id, attack.Attacker, attack.Target);
 		
 		//If the attack was a success (had target, hit, etc) send confirmation to clients
+		console.log("emitting " + attack.message);
 		if(Attack.list[attack.id].success){
 			for(var i in SOCKET_LIST){
 				var Asocket = SOCKET_LIST[i];
 				Asocket.emit("atkConfirm", {
 					player:data.id,
 					target:attack.Target.id,	
-					damage:attack.damage,
+					damage:attack.message,
 				});
 			}
 		}
@@ -274,7 +285,16 @@ io.sockets.on('connection', function(socket){
 			return;
 		}
 		
-		
+		//Player turn is over, set players to have max ap and not be ready
+		console.log("something " + data.lobby + " and " + data.lobby.id);
+		console.log("Maxing out player ap " + Player.list[i].lobby + " and " + Lobby.list[i]);
+		for(var i in Lobby.list[data.lobby.id].players){
+			console.log("Maxing out player ap " + Player.list[i].lobby + " and " + Lobby.list[i]);
+			if(Player.list[i].lobby.id == Lobby.list[data.lobby.id].id){
+				Player.list[i].ready = false;		
+				Player.list[i].APCurrent = Player.list[i].APMax;
+			}
+		}
 			
 		
 		Lobby.list[data.lobby.id].playerTurn = false;
@@ -424,6 +444,22 @@ setInterval(function(){
 			}
 			else if(Lobby.list[i].enemyTimer == 80){
 				console.log("Player turn!");
+				
+				//Apple all player turn skills!
+				for(var j in Lobby.list[i].players){
+						Player.list[j].ApplyAllTurnSkills(Player.list[j]);
+						for(var h in SOCKET_LIST){
+							var Asocket = SOCKET_LIST[h];
+							if(Player.list[Asocket.id].lobby != null && Player.list[Asocket.id].lobby.id == Player.list[j].lobby.id){
+								Asocket.emit('turnSkillMessage', {
+									message:Player.list[j].message,
+									id:Player.list[j].id,
+								});
+								Player.list[j].message ="";
+							}			
+					}
+				}
+				
 				for(var j in SOCKET_LIST){
 					var socket = SOCKET_LIST[j];
 					for(var h in Lobby.list[i].players){
@@ -434,26 +470,44 @@ setInterval(function(){
 					}
 				}
 				//Set all enemies to have max ap
-				for(var j in Enemy.list){
+				for(var j in Lobby.list[i].enemies){
 					//console.log(Enemy.list[j].lobby.id + " that is enemy lobby id, current lobby is " + Lobby.list[i].id);
 					if(Enemy.list[j].lobby.id == Lobby.list[i].id)
 						Enemy.list[j].APCurrent = Enemy.list[j].APMax;
 				}
 				//Set all players to have max ap and be ready
-				for(var j in Player.list){
+				/*for(var j in Player.list){
 					if(Player.list[j].lobby == Lobby.list[i]){
 						Player.list[j].ready = false;		
 						Player.list[j].APCurrent = Player.list[j].APMax;
-					}
-				}
+					}		
+				}*/
 			}
 		}
 	}
 }, 1000/25);
 
+//THIS IS ENEMY ATTACK
 function initiateEnemyBehavior(lobbyId){
 	Lobby.list[lobbyId].enemyTimer = 0;
 	var playerAmount = Player.getPlayerCount();
+	
+	//Make enemies use their turnskills in battle! (Vital)
+	for(var i in Lobby.list[lobbyId].enemies){
+		Enemy.list[i].ApplyAllTurnSkills(Enemy.list[i]);
+		for(var j in SOCKET_LIST){
+			var Asocket = SOCKET_LIST[j];
+			console.log(j + " hmm");
+			if(Player.list[Asocket.id].lobby != null && Player.list[Asocket.id].lobby.id == Enemy.list[i].lobby.id){
+				Asocket.emit('turnSkillMessage', {
+					message:Enemy.list[i].message,
+					id:Enemy.list[i].id,
+				});
+				Enemy.list[i].message ="";
+			}			
+		}
+	}
+	
 	console.log("Initiating enemy behaviour in lobby " + lobbyId);
 	for(var i in Lobby.list[lobbyId].enemies){
 				Enemy.list[i].target = Player.list[Lobby.GetRandomPlayer(lobbyId)];
@@ -461,6 +515,19 @@ function initiateEnemyBehavior(lobbyId){
 					attacker:Enemy.list[Lobby.list[lobbyId].enemies[i]],
 					target:Enemy.list[i].target,
 				});
+				
+				//Test for taunts!
+				attack.Attacker.currentAttackID = attack.id;
+				for(var j in Lobby.list[lobbyId].players){
+					if(Lobby.list[lobbyId].players[j] != attack.Target.id){
+						console.log("Checking for taunt on an attack...");
+						Player.list[Lobby.list[lobbyId].players[j]].ApplyTaunt(attack.Attacker, attack.Target);
+						console.log(Lobby.list[lobbyId].players[j] + " checked for this?");
+						console.log(Player.list[Lobby.list[lobbyId].players[j]].id + " just confirming ^");
+					}
+				}
+				
+				//console.log("The damage of the attack by the attacker of this attack is..." + attack.Attacker.currentAttack.damage);
 				
 				//Apply this attack
 				Attack.ApplyAttack(attack.id, attack.Attacker, attack.Target);
@@ -470,7 +537,7 @@ function initiateEnemyBehavior(lobbyId){
 					var tIdToSend = Enemy.list[i].target.id;
 					for(var i in SOCKET_LIST){
 						var socket = SOCKET_LIST[i];
-						if(Player.list[socket.id].lobby.id == lobbyId){
+						if(Player.list[socket.id].lobby != null && Player.list[socket.id].lobby.id == lobbyId){
 							socket.emit('enemyAttack', {
 								//This is kind of weird at the moment, attack is emitted only for testing
 								//Basically attack contains info of attacker and target so they are useless once refactored

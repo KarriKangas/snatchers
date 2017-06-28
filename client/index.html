@@ -81,7 +81,8 @@
 			//console.log("Player " + data.id + " joined " + data.lobby.id);
 			Player.list[data.id].lobby = data.lobby;
 			Player.list[data.id].partyLeader = data.leader;
-			Drawer.initMenu();	
+			if(data.id == selfId)
+				Drawer.initMenu();	
 			Player.list[selfId].inMenu = true;
 		});
 		
@@ -135,8 +136,10 @@
 			});
 			
 			socket.on('confirmGoBattle', function(data){
-				Player.list[data.id].readyToBattle = true;
-				goBattleText.text = ('Players ready to battle: (' + Player.getGoReadyCount(Player.list[data.id].lobby.id) + "/" + Player.getPlayerCount(Player.list[data.id].lobby.id) + ")");
+				if(Player.list[data.id] && Player.list[data.id].lobby.id == Player.list[selfId].lobby.id){
+					Player.list[data.id].readyToBattle = true;
+					goBattleText.text = ('Players ready to battle: (' + Player.getGoReadyCount(Player.list[data.id].lobby.id) + "/" + Player.getPlayerCount(Player.list[data.id].lobby.id) + ")");
+				}		
 			});
 				
 			socket.on('battleTransition', function(data){
@@ -199,6 +202,7 @@
 						message:data.damage,
 						x:Enemy.list[data.target].Sprite.x-50,
 						y:Enemy.list[data.target].Sprite.y,
+						color:"#ff0000",
 					});
 					
 					
@@ -228,10 +232,10 @@
 			
 			//Kind of a weird method using a lot of data from server emitted "attack", but works, ONLY FOR ENEMY ATTACKS
 			function drawFloatingText(attack){
-			console.log(attack.Attacker + "lol at works");
+			
 				var floatingText = FloatingText({
 					lobby:attack.Attacker.lobby.id,
-					message:attack.damage,
+					message:attack.message,
 					x:Player.list[attack.Target.id].Sprite.x+Math.random()*((40-10)+10),
 					y:Player.list[attack.Target.id].Sprite.y+Math.random()*((10-0)+0),
 				});
@@ -242,15 +246,17 @@
 				Player.list[selfId].lobby.playerTurn = true;
 				turnText.text = "Turn: Players";
 				for(var i in Player.list){
-					Player.list[i].APCurrent = Player.list[i].APMax;
-					Player.list[i].ready = false;
-					Player.onPlayerInfoChange(Player.list[i].id);
-					console.log("Player info change on player turn!");
+					if(Player.list.lobby != null && Player.list[i].lobby.id == data.lobbyId){
+						Player.list[i].ready = false;
+						Player.onLobbyInfoChange(data.lobbyId);
+						console.log("Player info change on player turn!");
+					}
 				}
 				
 				//SHOULD USE A CALLBACK (make sure every player has received updated enemy infos)
 				setTimeout(function(){
 					Enemy.onLobbyInfoChange(data.lobbyId);
+					Player.onLobbyInfoChange(data.lobbyId);
 				 }, 200);
 			});
 			
@@ -268,7 +274,7 @@
 				Player.list[data.id].body = data.body;
 				Player.list[data.id].bodyLevel = 1;
 				Player.list[data.id].bodyExperience = 0;
-				Player.list[data.id].Sprite = PIXI.Sprite.fromImage('client/img/Battle/' + data.body.name +'.png');
+				Player.list[data.id].Sprite = PIXI.Sprite.fromImage('client/img/Battle/Bodies/' + data.body.name +'.png');
 			
 			});
 			
@@ -301,7 +307,6 @@
 			for(var i = 0; i < data.player.length; i++){
 				var pack = data.player[i];
 				var p = Player.list[pack.id];
-				//console.log("Update pack is giving an AP of " + pack.APMax);
 				if(p){
 					if(pack.maxHealth !== undefined && pack.maxHealth !== p.maxHealth)
 						p.maxHealth = pack.maxHealth;
@@ -368,6 +373,31 @@
 				Enemy.list[data.id].dead = true;
 				Enemy.onEnemyInfoChange(data.id);
 			}, 600);
+		});
+		
+		socket.on('turnSkillMessage', function(data){
+			console.log("Creating a new turnskilltext");
+			setTimeout(function(){
+				var xpos, ypos;
+				if(data.id < 5){
+					thisLobby = Player.list[data.id].lobby.id,
+					xpos = Player.list[data.id].Sprite.x;
+					ypos =  Player.list[data.id].Sprite.y
+				}else if(data.id > 5){
+					thisLobby = Enemy.list[data.id].lobby.id,
+					xpos = Enemy.list[data.id].Sprite.x;
+					ypos =  Enemy.list[data.id].Sprite.y-50;
+				}
+			
+				var floatingText = FloatingText({
+					lobby:thisLobby,
+					message:data.message,
+					x:xpos,
+					y:ypos,
+					color:"#00ff00",
+				});		
+			}, 0);
+		
 		});
 		
 		socket.on('confirmSelect',function(data){

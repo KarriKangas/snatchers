@@ -3,8 +3,8 @@ var Enemy = require('./Enemy.js');
 var Lobby = function(){
 	instance = {};
 	instance.id = Math.random();
-	instance.name = Math.random().toString(36).substring(2,6);
-	instance.password = Math.random().toString(36).substring(2,6);
+	instance.name = Math.random().toString(36).substring(2,3); // NORMAL 2,6
+	instance.password = Math.random().toString(36).substring(2,3); //NORMAL 2,6
 	instance.players = {};
 	instance.enemies = {};
 	instance.enemyTimer = 0;
@@ -28,6 +28,19 @@ Lobby.AddPlayer = function(lobbyId, playerId){
 Lobby.AddEnemy = function(lobbyId, enemyId){
 	Lobby.list[lobbyId].enemies[enemyId] = enemyId;
 	//console.log("Enemy " + enemyId + " added to lobby " + lobbyId);
+}
+
+Lobby.DeleteLobby = function(lobbyId){
+	//Delete all enemies from that lobby
+	for(var i in Lobby.list[lobbyId].enemies)
+		delete Enemy.list[i];
+	//Make sure all players are deleted
+	for(var i in Lobby.list[lobbyId].players)
+		delete Player.list[i];
+	
+	delete Lobby.list[lobbyId];
+	
+	console.log(Lobby.list[lobbyId] + "<-if undefined, " + lobbyId + " is no more");
 }
 
 Lobby.ArePlayersReady = function(lobbyId){

@@ -1,3 +1,5 @@
+var Skill = require('./Skill.js');
+
 var Body = function(param){
 	var self = {
 		name:"",
@@ -8,6 +10,7 @@ var Body = function(param){
 		dieAmount:0,
 		maxLevel:0,
 		levelBonuses:[],
+		skills:[],
 	}
 	if(param){
 		if(param.name)
@@ -26,10 +29,17 @@ var Body = function(param){
 			self.maxLevel = param.maxLevel;	
 		if(param.levelBonuses)
 			self.levelBonuses = param.levelBonuses;	
+		if(param.skills)
+			self.skills = param.skills;
 	}
 	//console.log("Created Entity id:" + self.id + "\nhealthMax: " + self.healthMax + "\nAPMax: " + self.APMax+ "\ndieSize: " + self.dieSize+ "\ndieAmount: " + self.dieAmount);
+	//for(var i in self.skills)
+		//console.log("Created a body " + self.name + " with " + self.skills[0].name);
+		
+	
 	return self;
 }
+
 Body.getBody = function(difficulty){
 	//console.log("Getting body with " + difficulty + " difficulty");
 	var index = Math.round(Math.random() * ((difficulty+3)-(difficulty))+difficulty);;
@@ -54,7 +64,7 @@ Body.Wisp = Body({
 	dieAmount: 1,
 	maxLevel: 5,
 	levelBonuses: [ 20, 2, 2, 0 ],
-		
+	skills:[Skill.List[6]], //FOR TESTING ADD WISP A DIFFERENT SKILL EVERY ROUND
 });
 Body.list.push(Body.Wisp);
 
@@ -67,6 +77,7 @@ Body.Squirrel = Body({
 	dieAmount: 1,
 	maxLevel: 6,
 	levelBonuses: [ 25, 3, 2, 1 ],
+	skills:[Skill.List[0]],
 });
 Body.list.push(Body.Squirrel);
 
@@ -79,6 +90,7 @@ Body.Deer = Body({
 	dieAmount: 1,
 	maxLevel: 7,
 	levelBonuses: [ 30, 3, 3, 1 ],
+	skills:[Skill.List[1]],
 });
 Body.list.push(Body.Deer);
 
@@ -91,6 +103,7 @@ Body.Hedgehog = Body({
 	dieAmount: 2,
 	maxLevel: 8,
 	levelBonuses: [ 35, 4, 2, 2 ],
+	skills:[Skill.List[2]],
 });
 Body.list.push(Body.Hedgehog);
 
@@ -103,6 +116,7 @@ Body.Smallsnake = Body({
 	dieAmount: 2,
 	maxLevel: 9,
 	levelBonuses: [ 40, 5, 3, 2 ],
+	skills:[Skill.List[5]],
 });
 Body.list.push(Body.Smallsnake);
 
@@ -115,6 +129,7 @@ Body.Lizard = Body({
 	dieAmount: 2,
 	maxLevel: 10,
 	levelBonuses: [ 45, 5, 3, 2 ],
+	skills:[Skill.List[4]],
 });
 Body.list.push(Body.Lizard);
 

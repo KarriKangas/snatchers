@@ -88,7 +88,7 @@
 		for(var i in Player.list){
 			if(Player.list[i].id == id)
 				return counter;
-			if(Player.list[i].lobby.id == Player.list[id].lobby.id)
+			if(Player.list[i].lobby != null && Player.list[i].lobby.id == Player.list[id].lobby.id)
 				counter++;
 		}
 	}
@@ -120,14 +120,14 @@
 		var pready = "Not ready";
 		//console.log("Updating player stats in lobby " + lobbyId);
 		for(var i in Player.list){
-			pname = Player.list[i].id.toString();
-			if(Player.list[i].lobby.id == lobbyId){
-				//console.log("updated...");
+			if(Player.list[i].lobby != null && Player.list[i].lobby.id == lobbyId){
+				pname = Player.list[i].id.toString();
+				console.log("updated...");
 				if(Player.list[i].target == null) ptarget = "";
 				else ptarget = (Player.list[i].target.toString()).substring(2,5);
 				if(Player.list[i].ready) pready = "Ready";
 				Player.list[i].healthText.text = ('Player' + pname.substring(2,5) + " HP:" + Player.list[i].healthCurrent + "\nAP: " + Player.list[i].APCurrent + "\nDamage: "  + Player.list[i].dieAmount  +"d"+ Player.list[i].dieSize + "\nTarget: " + ptarget + "\n" + pready);
-				//console.log(Player.list[i].APCurrent + " this should be AP now?");
+				console.log(Player.list[i].healthCurrent + " this should be hp");
 			}
 		}
 	}

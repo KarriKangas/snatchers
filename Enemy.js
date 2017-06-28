@@ -34,6 +34,15 @@ var Enemy = function(param){
 			dieAmount:self.dieAmount,
 		};
 	}
+	
+	self.Kill = function(){	
+		Enemy.list[self.id].healthCurrent = 0;
+		Enemy.list[self.id].APCurrent = 0;
+		Enemy.list[self.id].APMax = 0;
+		Enemy.list[self.id].toDie = true;
+		
+	}
+	
 	Enemy.list[self.id] = self;
 	//console.log("Created Enemy id:" + self.id + "\nhealthMax: " + self.healthMax + "\nAPMax: " + self.APMax+ "\ndieSize: " + self.dieSize+ "\ndieAmount: " + self.dieAmount);	
 	Enemy.initPack.push(self.getInitPack());
@@ -56,13 +65,6 @@ Enemy.Create = function(difficulty, lobby){
 	
 	//console.log("Enemy created..." + enemy.body.name);
 	return enemy;
-}
-
-Enemy.Kill = function(id){
-	Enemy.list[id].healthCurrent = 0;
-	Enemy.list[id].APCurrent = 0;
-	Enemy.list[id].APMax = 0;
-	Enemy.list[id].toDie = true;
 }
 
 Enemy.getAllInitPack = function(){

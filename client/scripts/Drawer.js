@@ -154,12 +154,13 @@ var Drawer = function(){
 	});
 	
 	CharacterButton.on('pointerdown', () => {
-		Drawer.initChar();		
+		Drawer.initChar();	
+	
 	});
 			
 	CharBackButton.on('pointerdown', () => {
 		Drawer.initMenu();		
-		Player.list[selfId].inMenu = true;
+		
 	});
 	
 	ForestBattle.on('pointerdown', () => {
@@ -302,6 +303,7 @@ var Drawer = function(){
 	});	
 	
 	Atkbutton.on('pointerdown', () => {
+		console.log(Player.list[selfId].lobby.playerTurn + " and " + !Player.list[selfId].attacking);
 		if(Player.list[selfId].lobby.playerTurn && !Player.list[selfId].attacking){
 			socket.emit('atk',{
 				id:selfId
@@ -505,6 +507,7 @@ var Drawer = function(){
 		}
 		
 		Drawer.initMenu = function(){
+			Player.list[selfId].inMenu = true;
 			Player.list[selfId].inMenuChar = false;
 			Player.list[selfId].inStart = false;
 			
@@ -671,6 +674,7 @@ var Drawer = function(){
 		Player.list[selfId].inMenu = false;
 		Player.list[selfId].inMenuChar = true;
 		
+		
 		for (var i = pixi.stage.children.length - 1; i >= 0; i--){	
 			pixi.stage.removeChild(pixi.stage.children[i]);		
 		}
@@ -701,6 +705,14 @@ var Drawer = function(){
 		else
 			bodyXP = "\nBody experience: MAX";
 		
+		var skills="";
+		for(var i = 0; i < Player.list[selfId].body.skills.length; i++){
+			if(i!=0)
+				skills += ", ";
+			if(i%2==0)
+				skills += "\n"
+			skills = skills + Player.list[selfId].body.skills[i].name;
+		}
 		var Body = Player.list[selfId].body;
 		bodyText.text = "BODY STATS"
 		+"\n\nCurrent body: " + Player.list[selfId].body.name
@@ -709,6 +721,7 @@ var Drawer = function(){
 		+"\nAction Points: " + (Body.APMax + (Player.list[selfId].bodyLevel*Body.levelBonuses[1]))
 		+"\n\nBody level: " + Player.list[selfId].bodyLevel + "/" + Body.maxLevel
 		+ bodyXP
+		+"\n\nSkills: " + skills
 		+"\n\n---Everything else---";
 		bodyText.x = 34;
 		bodyText.y = 200;
