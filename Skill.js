@@ -1,6 +1,7 @@
-//SKILL CLASS IS JUST THE IMPLEMENTATION OF WHAT EVERY SKILL DOES!
-//THE BLUEPRINTS FOR SKILLS ARE DEFINED IN SKILLBLUEPRINTS.JS!
+//SKILL CLASS IS THE IMPLEMENTATION OF WHAT EVERY SKILL DOES!
+//SKILLS "STATS" ARE DEFINED AS Skill, AND THEIR EFFECTS AS UseSkill
 var Attack = require('./Attack.js');
+var Condition = require('./Condition.js');
 
 var Skill = function(param){
 	var instance = {
@@ -98,7 +99,7 @@ var ironskin = Skill({
 	name:"Ironskin",
 	tag:"ironskin",
 	id:2,
-	chance:0.5,
+	chance:1,
 	amount:0.01,
 	attackSkill:false,
 	targetSkill:true,
@@ -129,7 +130,7 @@ var reflect = Skill({
 	name:"Reflect",
 	tag:"reflect",
 	id:3,
-	chance:0.5,
+	chance:1,
 	amount:0.10,
 	attackSkill:false,
 	targetSkill:true,
@@ -214,5 +215,63 @@ var quick = Skill({
 	
 });
 Skill.List.push(quick);
+
+//Poison applies poison condition on an enemy which deals damage based on attacker damage
+Skill.UsePoison = function(attacker, target){
+	var skillID = attacker.GetSkillID("poison");
+	console.log("skillID for poison is " + skillID + " and attacker " + attacker.id + " and target id " + target.id);
+	if(attacker.body.skills[skillID].chance > Math.random()){
+		var conditionToAdd = Condition.List[Condition.GetConditionID("poison")];
+		conditionToAdd.amount = ((attacker.dieSize*attacker.dieAmount)/2)*0.1; // Poison damage is 10% of average damage 
+		//conditionToAdd.amount += attacker.bodyLevel*5; // This is just an example of changing the poison amount
+		target.conditions.push(conditionToAdd);
+		console.log(conditionToAdd.name + " was added to target!");
+		
+	}else{
+		return false;
+	}
+}
+Skill.UseList.push(Skill.UsePoison);
+
+var poison = Skill({
+	name:"Poison",
+	tag:"poison",
+	id:7,
+	chance:1,
+	amount:10,
+	attackSkill:true,
+	targetSkill:false,
+	turnSkill:false,
+	
+});
+Skill.List.push(poison);
+
+//Disease applies disease condition on an enemy which deals damage based on target health
+Skill.UseDisease = function(attacker, target){
+	var skillID = attacker.GetSkillID("disease");
+	if(attacker.body.skills[skillID].chance > Math.random()){
+		var conditionToAdd = Condition.List[Condition.GetConditionID("disease")];
+		conditionToAdd.amount = target.maxHealth * attacker.body.skills[skillID].amount; // Disease damage is 15% of target health
+		target.conditions.push(conditionToAdd);
+		console.log(conditionToAdd.name + " was added to target!");
+		
+	}else{
+		return false;
+	}
+}
+Skill.UseList.push(Skill.UseDisease);
+
+var disease = Skill({
+	name:"Disease",
+	tag:"disease",
+	id:8,
+	chance:1,
+	amount:0.15,
+	attackSkill:true,
+	targetSkill:false,
+	turnSkill:false,
+	
+});
+Skill.List.push(disease);
 
 module.exports = Skill;

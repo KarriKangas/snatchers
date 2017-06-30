@@ -62,16 +62,18 @@ Attack.ApplyAttack = function(id, attacker, target){
 				
 			
 		
-			
+		console.log("Applying target skills");
 		//Recheck target if there was a switch
 		target = Attack.list[id].Target;
-			
+		
+		
 		//Then apply target skills
 		target.ApplyAllTargetSkills(attacker, target);
-		
+		console.log("Target skills applied");
 		//Attack related skill checks here
 		console.log("Applying attack skills");
 		attacker.ApplyAllAttackSkills(attacker, target);
+
 		console.log("Applied attack skills");
 		
 		//Recheck damage if there was a change

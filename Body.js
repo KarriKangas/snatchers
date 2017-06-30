@@ -64,7 +64,7 @@ Body.Wisp = Body({
 	dieAmount: 1,
 	maxLevel: 5,
 	levelBonuses: [ 20, 2, 2, 0 ],
-	skills:[Skill.List[6]], //FOR TESTING ADD WISP A DIFFERENT SKILL EVERY ROUND
+	skills:[Skill.List[7], Skill.List[8]], //FOR TESTING ADD WISP A DIFFERENT SKILL EVERY ROUND
 });
 Body.list.push(Body.Wisp);
 

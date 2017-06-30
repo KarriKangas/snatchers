@@ -13,6 +13,7 @@ var Entity = function(param){
 		dieAmount:0,
 		currentAttackID:0, // the only reason this is set to ID instead of attack itself is "Maximum call stack size exceeded", node error (apparently sending too much data on emitting large entities)
 		skills:[],
+		conditions:[], //These are conditions like poison/disease which only last a couple of turns in a battle
 		message: "", //Every entity is set to have a MESSAGE that can be sent from server (e.g. a skill is used by a player -> store message in this for the entity and send to client)
 	}
 	if(param){
@@ -39,8 +40,8 @@ var Entity = function(param){
 	}
 	//console.log("Created Entity id:" + self.id + "\nhealthMax: " + self.healthMax + "\nAPMax: " + self.APMax+ "\ndieSize: " + self.dieSize+ "\ndieAmount: " + self.dieAmount);
 	
+	//SKILL RELATED ENTITY METHODS
 	self.GetSkillID = function(tag){
-
 		for(i = 0; i < self.body.skills.length; i++){
 			console.log("Getting skill id " + i + " " + self.body.skills[i].tag);
 			if(self.body.skills[i].tag == tag){
@@ -53,7 +54,7 @@ var Entity = function(param){
 	
 	self.ApplyAllAttackSkills = function(attacker, target){
 		for(i = 0; i < self.body.skills.length; i++){
-			if(self.body.skills[i].attackSkill){
+			if(self.id == attacker.id && self.body.skills[i].attackSkill){
 				console.log("FROM ENTITY CLASS using attack skill " + self.body.skills[i].name);
 				self.body.skills[i].use(attacker, target);
 				
@@ -63,7 +64,7 @@ var Entity = function(param){
 	
 	self.ApplyAllTargetSkills = function(attacker, target){
 		for(i = 0; i < self.body.skills.length; i++){
-			if(self.body.skills[i].targetSkill){
+			if(self.id == target.id && self.body.skills[i].targetSkill){
 				console.log("FROM ENTITY CLASS using target skill " + self.body.skills[i].name);
 				self.body.skills[i].use(attacker, target);
 				
@@ -92,6 +93,17 @@ var Entity = function(param){
 			self.body.skills[tauntID].use(attacker,target);			
 		}
 		
+	}
+	
+	//CONDITION RELATED ENTITY METHODS
+	self.ApplyAllTurnCondition = function(target){
+		for(i = 0; i < self.conditions.length; i++){
+			if(self.body.condition[i].turnCondition){
+				console.log("FROM ENTITY CLASS applying turn coundition  " + self.body.conditions[i].name);
+				self.body.conditions[i].apply(target, self.body.conditions[i]); //Apply current looped condition to target (target = usually (always?) self in conditions)
+				
+			}
+		}
 	}
 	
 	return self;

@@ -151,7 +151,7 @@ Player.ChangeBody = function(id){
 	var body = Player.list[id].body;
 	Player.ApplySoulBonuses(id);
 }
-//THIS IS A PLACEHOLDER METHOD
+//THIS IS A WONKY METHOD
 Player.ApplySoulBonuses = function(id){
 	var body = Player.list[id].body;
 	

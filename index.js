@@ -13,6 +13,7 @@ var Body = require('./Body.js');
 var Attack = require('./Attack.js');
 
 var Skill = require('./Skill.js');
+var Condition = require('./Condition.js');
 
 const XPBASE = 50;
 const XPFACTOR = 2.5;
